@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow - Your Personal Focus Coach</title>
+    <meta name="description" content="Build sustainable focus habits with personalized coaching, smart reminders, and culturally diverse wisdom.">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10B981">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+</head>
+<body class="bg-gray-50 text-gray-900 transition-colors duration-300">
+    <!-- App Container -->
+    <div id="app" class="min-h-screen">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+            <div class="text-center">
+                <div class="text-4xl mb-4">🎯</div>
+                <div class="text-2xl font-bold text-gray-800 mb-2">FocusFlow</div>
+                <div class="text-gray-600">Your Personal Focus Coach</div>
+                <div class="mt-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Screen -->
+        <div id="welcome-screen" class="hidden fixed inset-0 bg-gradient-to-br from-green-50 to-blue-50 z-40 flex items-center justify-center p-4">
+            <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
+                <div class="text-6xl mb-6">🎯</div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-4">Welcome to FocusFlow</h1>
+                <p class="text-gray-600 mb-8 leading-relaxed">
+                    Your personal focus coach that helps you build sustainable focus habits through personalized coaching, smart reminders, and culturally diverse wisdom.
+                </p>
+                <button id="start-onboarding" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200">
+                    Get Started
+                </button>
+            </div>
+        </div>
+
+        <!-- Onboarding Flow -->
+        <div id="onboarding" class="hidden fixed inset-0 bg-white z-30">
+            <div class="max-w-2xl mx-auto p-6 h-full flex flex-col">
+                <!-- Progress Bar -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-600">Step <span id="current-step">1</span> of 6</span>
+                        <span class="text-sm text-gray-600"><span id="progress-percentage">17</span>%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div id="progress-bar" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 17%"></div>
+                    </div>
+                </div>
+
+                <!-- Question Container -->
+                <div id="question-container" class="flex-1 flex flex-col justify-center">
+                    <!-- Questions will be dynamically inserted here -->
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex justify-between mt-8">
+                    <button id="prev-btn" class="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200">
+                        ← Previous
+                    </button>
+                    <button id="next-btn" class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200">
+                        Next →
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="main-app" class="hidden min-h-screen">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b border-gray-200">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex justify-between items-center h-16">
+                        <div class="flex items-center">
+                            <div class="text-2xl mr-3">🎯</div>
+                            <h1 class="text-xl font-bold text-gray-900">FocusFlow</h1>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <button id="mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                                <i data-lucide="moon" class="w-5 h-5"></i>
+                            </button>
+                            <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                                <i data-lucide="settings" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Dashboard -->
+                <div id="dashboard" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Timer Section -->
+                    <div class="lg:col-span-2">
+                        <div id="timer-container" class="bg-white rounded-2xl shadow-lg p-8">
+                            <div class="text-center">
+                                <h2 class="text-2xl font-bold text-gray-800 mb-6">Focus Timer</h2>
+                                <div id="timer-display" class="text-6xl font-mono text-gray-800 mb-8">25:00</div>
+                                <div class="flex justify-center space-x-4 mb-6">
+                                    <button id="quick-focus" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200">
+                                        Quick Focus (25m)
+                                    </button>
+                                    <button id="deep-work" class="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors duration-200">
+                                        Deep Work (90m)
+                                    </button>
+                                    <button id="marathon" class="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors duration-200">
+                                        Marathon (3h)
+                                    </button>
+                                </div>
+                                <div class="flex justify-center space-x-4">
+                                    <button id="start-timer" class="px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors duration-200">
+                                        Start
+                                    </button>
+                                    <button id="pause-timer" class="px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors duration-200 hidden">
+                                        Pause
+                                    </button>
+                                    <button id="stop-timer" class="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors duration-200 hidden">
+                                        Stop
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <div class="space-y-6">
+                        <!-- Daily Quote -->
+                        <div id="quote-card" class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Today's Wisdom</h3>
+                            <div id="quote-text" class="text-gray-700 italic mb-4">
+                                "You have power over your mind - not outside events. Realize this, and you will find strength."
+                            </div>
+                            <div id="quote-author" class="text-sm text-gray-600">— Marcus Aurelius</div>
+                            <button id="new-quote" class="mt-4 text-sm text-green-600 hover:text-green-700 transition-colors duration-200">
+                                New Quote
+                            </button>
+                        </div>
+
+                        <!-- Progress Summary -->
+                        <div id="progress-card" class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Today's Progress</h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-600">Focus Time</span>
+                                    <span id="today-focus-time" class="font-semibold">0h 0m</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-600">Sessions</span>
+                                    <span id="today-sessions" class="font-semibold">0</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-600">Streak</span>
+                                    <span id="current-streak" class="font-semibold">0 days</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Settings</h2>
+                        <button id="close-settings" class="text-gray-400 hover:text-gray-600">
+                            <i data-lucide="x" class="w-6 h-6"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-6">
+                        <!-- Mode Selection -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Interface Mode</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="radio" name="mode" value="zen" class="mr-3" checked>
+                                    <span>Zen Mode (Stoic)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="mode" value="achievement" class="mr-3">
+                                    <span>Achievement Mode (Gamified)</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="mode" value="hybrid" class="mr-3">
+                                    <span>Hybrid Mode</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Lock Screen Widget -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Lock Screen Widget</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="lock-screen-widget" class="mr-3">
+                                    <span>Show timer on lock screen</span>
+                                </label>
+                                <div id="widget-preview" class="hidden p-4 bg-gray-100 rounded-lg">
+                                    <div class="text-center">
+                                        <div class="text-2xl font-mono">25:00</div>
+                                        <div class="text-sm text-gray-600">Focus Session</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notification Settings -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Notifications</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="session-reminders" class="mr-3">
+                                    <span>Session reminders</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="break-reminders" class="mr-3">
+                                    <span>Break reminders</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="daily-motivation" class="mr-3">
+                                    <span>Daily motivation</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html> 

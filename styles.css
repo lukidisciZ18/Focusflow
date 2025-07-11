@@ -1,0 +1,896 @@
+/* FocusFlow Custom Styles */
+
+/* Custom Properties for Theme Colors */
+:root {
+    --zen-primary: #6B7280;
+    --zen-secondary: #9CA3AF;
+    --zen-background: #F5F5F5;
+    --zen-surface: #FFFFFF;
+    --zen-accent: #4B5563;
+    --zen-text: #374151;
+    --zen-text-muted: #a6a6a6;
+    --zen-border: #E5E7EB;
+    
+    --achievement-primary: #10B981;
+    --achievement-secondary: #F59E0B;
+    --achievement-accent: #EF4444;
+    --achievement-vibrant: #8B5CF6;
+    --achievement-background: #F0FDF4;
+    --achievement-surface: #FFFFFF;
+    
+    --hybrid-primary: #059669;
+    --hybrid-secondary: #7C3AED;
+    --hybrid-background: #F8FAFC;
+    --hybrid-surface: #FFFFFF;
+}
+
+/* Zen Mode Styles - Enhanced for Focus */
+.zen-mode {
+    --primary-color: var(--zen-primary);
+    --secondary-color: var(--zen-secondary);
+    --background-color: var(--zen-background);
+    --surface-color: var(--zen-surface);
+    --text-color: var(--zen-text);
+    --text-muted: var(--zen-text-muted);
+    --border-color: var(--zen-border);
+    --accent-color: var(--zen-accent);
+}
+
+.zen-mode body {
+    background-color: var(--zen-background);
+    color: var(--zen-text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    transition: all 0.3s ease;
+}
+
+.zen-mode .bg-white {
+    background-color: var(--zen-surface);
+    border: 1px solid var(--zen-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.zen-mode .shadow-lg {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.zen-mode .text-gray-800 {
+    color: var(--zen-text);
+}
+
+.zen-mode .text-gray-600 {
+    color: var(--zen-text-muted);
+}
+
+.zen-mode .text-gray-700 {
+    color: var(--zen-text);
+}
+
+/* Zen Mode Timer Enhancements */
+.zen-mode #timer-container {
+    background: linear-gradient(135deg, var(--zen-surface), #FAFAFA);
+    border: 1px solid var(--zen-border);
+    transition: all 0.4s ease;
+}
+
+.zen-mode #timer-display {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
+    font-weight: 300;
+    color: var(--zen-text);
+    text-shadow: none;
+    transition: all 0.3s ease;
+}
+
+.zen-mode .timer-active {
+    background: linear-gradient(135deg, #F8FAFC, #F1F5F9);
+    border-color: var(--zen-accent);
+    transform: scale(1.02);
+}
+
+.zen-mode .timer-active #timer-display {
+    color: var(--zen-accent);
+    font-weight: 400;
+}
+
+/* Zen Mode Button Styling */
+.zen-mode button {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.zen-mode button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.zen-mode .btn-primary {
+    background-color: var(--zen-accent);
+    color: white;
+    border: none;
+}
+
+.zen-mode .btn-primary:hover {
+    background-color: var(--zen-primary);
+}
+
+/* Zen Mode Quote Card */
+.zen-mode #quote-card {
+    background: linear-gradient(135deg, var(--zen-surface), #FAFAFA);
+    border: 1px solid var(--zen-border);
+    transition: all 0.3s ease;
+}
+
+.zen-mode #quote-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+.zen-mode #quote-text {
+    font-style: italic;
+    color: var(--zen-text);
+    line-height: 1.7;
+}
+
+.zen-mode #quote-author {
+    color: var(--zen-text-muted);
+    font-size: 0.875rem;
+}
+
+/* Zen Mode Progress Card */
+.zen-mode #progress-card {
+    background: linear-gradient(135deg, var(--zen-surface), #FAFAFA);
+    border: 1px solid var(--zen-border);
+}
+
+.zen-mode #progress-card .space-y-4 > div {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--zen-border);
+    transition: all 0.2s ease;
+}
+
+.zen-mode #progress-card .space-y-4 > div:last-child {
+    border-bottom: none;
+}
+
+.zen-mode #progress-card .space-y-4 > div:hover {
+    background-color: rgba(107, 114, 128, 0.05);
+    border-radius: 6px;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+/* Zen Mode Header */
+.zen-mode header {
+    background: var(--zen-surface);
+    border-bottom: 1px solid var(--zen-border);
+    backdrop-filter: blur(10px);
+}
+
+.zen-mode #mode-toggle,
+.zen-mode #settings-btn {
+    color: var(--zen-text-muted);
+    transition: all 0.2s ease;
+}
+
+.zen-mode #mode-toggle:hover,
+.zen-mode #settings-btn:hover {
+    color: var(--zen-text);
+    background-color: rgba(107, 114, 128, 0.1);
+}
+
+/* Zen Mode Settings Modal */
+.zen-mode #settings-modal .bg-white {
+    background: var(--zen-surface);
+    border: 1px solid var(--zen-border);
+}
+
+.zen-mode #settings-modal input[type="radio"],
+.zen-mode #settings-modal input[type="checkbox"] {
+    accent-color: var(--zen-accent);
+}
+
+/* Zen Mode Animations */
+.zen-mode .fade-in {
+    animation: zenFadeIn 0.6s ease-out;
+}
+
+@keyframes zenFadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+.zen-mode .pulse {
+    animation: zenPulse 3s ease-in-out infinite;
+}
+
+@keyframes zenPulse {
+    0%, 100% { 
+        opacity: 1; 
+    }
+    50% { 
+        opacity: 0.8; 
+    }
+}
+
+/* Zen Mode Focus States */
+.zen-mode button:focus,
+.zen-mode input:focus,
+.zen-mode select:focus {
+    outline: 2px solid var(--zen-accent);
+    outline-offset: 2px;
+}
+
+/* Zen Mode Loading States */
+.zen-mode .loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.zen-mode .loading::after {
+    border-top-color: var(--zen-accent);
+}
+
+/* Zen Mode Success/Error States */
+.zen-mode .success {
+    background-color: #10B981;
+    color: white;
+}
+
+.zen-mode .error {
+    background-color: #EF4444;
+    color: white;
+}
+
+.zen-mode .warning {
+    background-color: #F59E0B;
+    color: white;
+}
+
+/* Achievement Mode Styles - Enhanced */
+.achievement-mode {
+    --primary-color: var(--achievement-primary);
+    --secondary-color: var(--achievement-secondary);
+    --accent-color: var(--achievement-accent);
+    --vibrant-color: var(--achievement-vibrant);
+    --background-color: var(--achievement-background);
+    --surface-color: var(--achievement-surface);
+    --text-color: #1F2937;
+    --text-muted: #4B5563;
+}
+
+.achievement-mode body {
+    background: linear-gradient(135deg, #F0FDF4, #ECFDF5);
+    color: var(--text-color);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.achievement-mode .bg-white {
+    background: linear-gradient(135deg, #FFFFFF, #F9FAFB);
+    border: 2px solid #10B981;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+}
+
+.achievement-mode .shadow-lg {
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+}
+
+.achievement-mode #timer-container {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+    border: 3px solid #059669;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+}
+
+.achievement-mode #timer-display {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    font-weight: 600;
+}
+
+.achievement-mode button {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+    border: none;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    transition: all 0.2s ease;
+}
+
+.achievement-mode button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.achievement-mode #quote-card {
+    background: linear-gradient(135deg, #FFFFFF, #F0FDF4);
+    border: 2px solid #10B981;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
+}
+
+.achievement-mode #progress-card {
+    background: linear-gradient(135deg, #FFFFFF, #F0FDF4);
+    border: 2px solid #10B981;
+}
+
+.achievement-mode header {
+    background: linear-gradient(135deg, #FFFFFF, #F0FDF4);
+    border-bottom: 2px solid #10B981;
+}
+
+/* Hybrid Mode Styles - Enhanced */
+.hybrid-mode {
+    --primary-color: var(--hybrid-primary);
+    --secondary-color: var(--hybrid-secondary);
+    --background-color: var(--hybrid-background);
+    --surface-color: var(--hybrid-surface);
+    --text-color: #1F2937;
+    --text-muted: #4B5563;
+}
+
+.hybrid-mode body {
+    background: linear-gradient(135deg, #F8FAFC, #F1F5F9);
+    color: var(--text-color);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.hybrid-mode .bg-white {
+    background: linear-gradient(135deg, #FFFFFF, #FAFAFA);
+    border: 1px solid #7C3AED;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+}
+
+.hybrid-mode .shadow-lg {
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.15);
+}
+
+.hybrid-mode #timer-container {
+    background: linear-gradient(135deg, #059669, #7C3AED);
+    color: white;
+    border: 2px solid #7C3AED;
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.2);
+}
+
+.hybrid-mode #timer-display {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    font-weight: 500;
+}
+
+.hybrid-mode button {
+    background: linear-gradient(135deg, #059669, #7C3AED);
+    color: white;
+    border: none;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
+    transition: all 0.2s ease;
+}
+
+.hybrid-mode button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
+}
+
+.hybrid-mode #quote-card {
+    background: linear-gradient(135deg, #FFFFFF, #FAFAFA);
+    border: 1px solid #7C3AED;
+    box-shadow: 0 6px 20px rgba(124, 58, 237, 0.1);
+}
+
+.hybrid-mode #progress-card {
+    background: linear-gradient(135deg, #FFFFFF, #FAFAFA);
+    border: 1px solid #7C3AED;
+}
+
+.hybrid-mode header {
+    background: linear-gradient(135deg, #FFFFFF, #FAFAFA);
+    border-bottom: 1px solid #7C3AED;
+}
+
+/* Global Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes bounce {
+    0%, 20%, 53%, 80%, 100% { transform: translate3d(0,0,0); }
+    40%, 43% { transform: translate3d(0,-30px,0); }
+    70% { transform: translate3d(0,-15px,0); }
+    90% { transform: translate3d(0,-4px,0); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes progressFill {
+    from { width: 0%; }
+    to { width: 100%; }
+}
+
+/* Animation Classes */
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+.pulse {
+    animation: pulse 2s infinite;
+}
+
+.bounce {
+    animation: bounce 1s;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+.progress-fill {
+    animation: progressFill 0.3s ease-out;
+}
+
+/* Timer Styles */
+.timer-active {
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.timer-active .timer-display {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Progress Ring */
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-circle {
+    transition: stroke-dasharray 0.3s ease;
+}
+
+/* Quote Card Animations */
+.quote-card {
+    transition: all 0.3s ease;
+}
+
+.quote-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* Mode-specific Button Styles */
+.zen-mode .btn-primary {
+    background-color: var(--zen-primary);
+    color: white;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.zen-mode .btn-primary:hover {
+    background-color: #4B5563;
+    transform: translateY(-1px);
+}
+
+.achievement-mode .btn-primary {
+    background: linear-gradient(135deg, var(--achievement-primary), var(--achievement-secondary));
+    color: white;
+    border: none;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.achievement-mode .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.hybrid-mode .btn-primary {
+    background: linear-gradient(135deg, var(--hybrid-primary), var(--hybrid-secondary));
+    color: white;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.hybrid-mode .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+}
+
+/* Lock Screen Widget Styles */
+.widget-zen {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(107, 114, 128, 0.2);
+    color: #374151;
+}
+
+.widget-achievement {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(139, 92, 246, 0.95));
+    backdrop-filter: blur(10px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.widget-hybrid {
+    background: linear-gradient(135deg, rgba(5, 150, 105, 0.95), rgba(124, 58, 237, 0.95));
+    backdrop-filter: blur(10px);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .timer-display {
+        font-size: 3rem !important;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-group button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .timer-display {
+        font-size: 2.5rem !important;
+    }
+    
+    .quote-card,
+    .progress-card {
+        padding: 1rem;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .zen-mode {
+        --background-color: #181C20;
+        --surface-color: #23272F;
+        --text-color: #F9FAFB;
+        --text-muted: #A3A3A3;
+        --border-color: #374151;
+        --accent-color: #6B7280;
+    }
+    .zen-mode body {
+        background-color: #181C20;
+        color: #F9FAFB;
+    }
+    .zen-mode .bg-white,
+    .zen-mode #quote-card,
+    .zen-mode #progress-card,
+    .zen-mode #timer-container {
+        background: #23272F !important;
+        color: #F9FAFB !important;
+        border-color: #374151 !important;
+    }
+    .zen-mode #timer-display {
+        color: #F9FAFB !important;
+    }
+    .zen-mode button {
+        background-color: #374151 !important;
+        color: #F9FAFB !important;
+        border: none;
+    }
+    .zen-mode button:hover {
+        background-color: #6B7280 !important;
+    }
+    .zen-mode header {
+        background: #23272F !important;
+        border-bottom: 1px solid #374151 !important;
+    }
+
+    .achievement-mode {
+        --background-color: #101825;
+        --surface-color: #1A2233;
+        --text-color: #F9FAFB;
+        --text-muted: #A3A3A3;
+    }
+    .achievement-mode body {
+        background: #101825;
+        color: #F9FAFB;
+    }
+    .achievement-mode .bg-white,
+    .achievement-mode #quote-card,
+    .achievement-mode #progress-card,
+    .achievement-mode #timer-container {
+        background: #1A2233 !important;
+        color: #F9FAFB !important;
+        border-color: #10B981 !important;
+    }
+    .achievement-mode #timer-display {
+        color: #F9FAFB !important;
+    }
+    .achievement-mode button {
+        background: linear-gradient(135deg, #10B981, #059669) !important;
+        color: #F9FAFB !important;
+        border: none;
+    }
+    .achievement-mode button:hover {
+        background: #059669 !important;
+    }
+    .achievement-mode header {
+        background: #1A2233 !important;
+        border-bottom: 2px solid #10B981 !important;
+    }
+
+    .hybrid-mode {
+        --background-color: #181C20;
+        --surface-color: #23272F;
+        --text-color: #F9FAFB;
+        --text-muted: #A3A3A3;
+    }
+    .hybrid-mode body {
+        background: #181C20;
+        color: #F9FAFB;
+    }
+    .hybrid-mode .bg-white,
+    .hybrid-mode #quote-card,
+    .hybrid-mode #progress-card,
+    .hybrid-mode #timer-container {
+        background: #23272F !important;
+        color: #F9FAFB !important;
+        border-color: #7C3AED !important;
+    }
+    .hybrid-mode #timer-display {
+        color: #F9FAFB !important;
+    }
+    .hybrid-mode button {
+        background: linear-gradient(135deg, #7C3AED, #059669) !important;
+        color: #F9FAFB !important;
+        border: none;
+    }
+    .hybrid-mode button:hover {
+        background: #7C3AED !important;
+    }
+    .hybrid-mode header {
+        background: #23272F !important;
+        border-bottom: 1px solid #7C3AED !important;
+    }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #F1F5F9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* Print Styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+} 
+
+body {
+  background: #fff;
+  font: 100% system-ui;
+}
+
+h1,
+p {
+  color: #222;
+}
+
+body.dark-theme {
+  background: #121212 !important;
+}
+body.dark-theme h1,
+body.dark-theme p {
+  color: #eee !important;
+}
+body.dark-theme a {
+  color: #809fff !important;
+}
+
+/* Ensure mode classes still work, but dark-theme overrides take precedence */
+body.dark-theme .bg-white,
+body.dark-theme #quote-card,
+body.dark-theme #progress-card,
+body.dark-theme #timer-container {
+  background: #23272F !important;
+  color: #F9FAFB !important;
+  border-color: #374151 !important;
+}
+body.dark-theme #timer-display {
+  color: #F9FAFB !important;
+}
+body.dark-theme button {
+  background-color: #374151 !important;
+  color: #F9FAFB !important;
+  border: none;
+}
+body.dark-theme button:hover {
+  background-color: #6B7280 !important;
+}
+body.dark-theme header {
+  background: #23272F !important;
+  border-bottom: 1px solid #374151 !important;
+} 
+
+body.dark-theme, body.dark-theme h1, body.dark-theme h2, body.dark-theme h3, body.dark-theme h4, body.dark-theme h5, body.dark-theme h6, body.dark-theme p, body.dark-theme span, body.dark-theme div, body.dark-theme label, body.dark-theme li, body.dark-theme th, body.dark-theme td, body.dark-theme strong, body.dark-theme em, body.dark-theme b, body.dark-theme i {
+  color: #F9FAFB !important;
+} 
+
+/* Dark mode for lock screen widget preview */
+.dark-theme #widget-preview .p-4 {
+  background-color: #1f2937 !important; /* dark gray */
+  color: #f9fafb !important;
+  border-color: #374151 !important;
+}
+.dark-theme #widget-preview .text-gray-700,
+.dark-theme #widget-preview .text-gray-600,
+.dark-theme #widget-preview .text-gray-500 {
+  color: #f9fafb !important;
+  opacity: 0.95;
+}
+.dark-theme #widget-preview .text-purple-700,
+.dark-theme #widget-preview .text-purple-800,
+.dark-theme #widget-preview .text-purple-500 {
+  color: #c4b5fd !important;
+}
+.dark-theme #widget-preview .bg-gradient-to-br {
+  background: linear-gradient(135deg, #312e81, #6d28d9) !important;
+}
+.dark-theme #widget-preview .text-white {
+  color: #f9fafb !important;
+}
+
+/* Dark mode for timer display */
+.dark-theme #timer-display {
+  color: #f9fafb !important;
+  text-shadow: 0 2px 8px #111827;
+}
+
+/* Dark mode for dashboard summary */
+.dark-theme #user-summary {
+  background-color: #1e293b !important;
+  color: #f9fafb !important;
+}
+
+/* Dark mode for progress card and quote card */
+.dark-theme #progress-card,
+.dark-theme #quote-card {
+  background-color: #1e293b !important;
+  color: #f9fafb !important;
+} 
+
+/* Zen Mode + Dark Mode Styles */
+.zen-mode.dark-theme body,
+.zen-mode.dark-theme #app,
+.zen-mode.dark-theme #main-app {
+  background-color: #181e25 !important;
+  color: #f3f4f6 !important;
+}
+.zen-mode.dark-theme #header, .zen-mode.dark-theme header {
+  background: #181e25 !important;
+  border-bottom: 1px solid #374151 !important;
+  box-shadow: none !important;
+}
+.zen-mode.dark-theme #timer-container {
+  background: #181e25 !important;
+  border: 1px solid #374151 !important;
+  box-shadow: none !important;
+}
+.zen-mode.dark-theme #timer-display {
+  color: #f3f4f6 !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', monospace;
+  font-weight: 300;
+  font-size: 3rem;
+  letter-spacing: 0.02em;
+  background: none !important;
+  text-shadow: none !important;
+}
+.zen-mode.dark-theme .timer-controls button,
+.zen-mode.dark-theme #start-timer,
+.zen-mode.dark-theme #pause-timer,
+.zen-mode.dark-theme #stop-timer {
+  background: transparent !important;
+  color: #9ca3af !important;
+  border: 1px solid #374151 !important;
+  box-shadow: none !important;
+  font-weight: 400;
+  transition: border-color 0.2s;
+}
+.zen-mode.dark-theme .timer-controls button:hover,
+.zen-mode.dark-theme #start-timer:hover,
+.zen-mode.dark-theme #pause-timer:hover,
+.zen-mode.dark-theme #stop-timer:hover {
+  border-color: #9ca3af !important;
+  background: #232b36 !important;
+}
+.zen-mode.dark-theme #progress-bar {
+  background: #64748b !important;
+  height: 4px !important;
+  border-radius: 2px !important;
+  transition: width 0.3s;
+}
+.zen-mode.dark-theme #progress-card,
+.zen-mode.dark-theme #quote-card,
+.zen-mode.dark-theme #user-summary {
+  background: #232b36 !important;
+  color: #d1d5db !important;
+  border: 1px solid #374151 !important;
+  box-shadow: none !important;
+}
+.zen-mode.dark-theme #quote-text {
+  color: #9ca3af !important;
+  font-style: italic;
+}
+.zen-mode.dark-theme #quote-author {
+  color: #6b7280 !important;
+}
+.zen-mode.dark-theme #widget-preview .p-4 {
+  background: #232b36 !important;
+  color: #f3f4f6 !important;
+  border-color: #374151 !important;
+}
+.zen-mode.dark-theme #widget-preview .text-gray-700,
+.zen-mode.dark-theme #widget-preview .text-gray-600,
+.zen-mode.dark-theme #widget-preview .text-gray-500 {
+  color: #f3f4f6 !important;
+  opacity: 0.95;
+}
+.zen-mode.dark-theme #widget-preview .text-purple-700,
+.zen-mode.dark-theme #widget-preview .text-purple-800,
+.zen-mode.dark-theme #widget-preview .text-purple-500 {
+  color: #a5b4fc !important;
+}
+.zen-mode.dark-theme #widget-preview .bg-gradient-to-br {
+  background: #232b36 !important;
+}
+.zen-mode.dark-theme #widget-preview .text-white {
+  color: #f3f4f6 !important;
+}
+.zen-mode.dark-theme #daily-focus-goal {
+  background: #232b36 !important;
+  color: #d1d5db !important;
+  border: 1px solid #374151 !important;
+}
+.zen-mode.dark-theme .hidden-in-zen {
+  display: none !important;
