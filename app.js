@@ -13,18 +13,12 @@ function hideAuthModal() {
 class FocusFlowAuth {
     constructor() {
         // Use real API URL - replace with your deployed backend URL
-        this.apiUrl = process.env.NODE_ENV === 'production' 
-            ? 'https://your-backend-domain.com/api'  // Replace with your actual backend URL
-            : 'http://localhost:3001/api';  // Local development
+        this.apiUrl = 'http://localhost:3001/api';  // Local development
         this.isAuthenticated = false;
         this.currentUser = null;
         
-        // Use real fetch in production, mock for testing
-        if (process.env.NODE_ENV === 'production' || !window.mockFetch) {
-            this.fetch = window.fetch;
-        } else {
-            this.fetch = window.mockFetch;
-        }
+        // Use real fetch for local development
+        this.fetch = window.fetch;
     }
 
     async signUp(email, password) {

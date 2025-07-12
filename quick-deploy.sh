@@ -40,9 +40,9 @@ echo ""
 echo "Press Ctrl+C to stop servers"
 echo ""
 
-# Start backend
+# Start backend (using mock server for local development)
 cd backend
-npm start &
+npm run mock &
 BACKEND_PID=$!
 cd ..
 
