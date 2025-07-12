@@ -6,6 +6,11 @@
     <title>FocusFlow - Your Personal Focus Coach</title>
     <meta name="description" content="Build sustainable focus habits with personalized coaching, smart reminders, and culturally diverse wisdom.">
     
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -38,44 +43,49 @@
         </div>
 
         <!-- Welcome Screen -->
-        <div id="welcome-screen" class="hidden fixed inset-0 bg-gradient-to-br from-green-50 to-blue-50 z-40 flex items-center justify-center p-4">
+        <div id="welcome-screen" class="hidden fixed inset-0 bg-gradient-to-br from-green-50 to-blue-50 z-40 flex items-center justify-center p-4 transition-opacity duration-500">
             <div class="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
                 <div class="text-6xl mb-6">🎯</div>
                 <h1 class="text-3xl font-bold text-gray-800 mb-4">Welcome to FocusFlow</h1>
                 <p class="text-gray-600 mb-8 leading-relaxed">
                     Your personal focus coach that helps you build sustainable focus habits through personalized coaching, smart reminders, and culturally diverse wisdom.
                 </p>
-                <button id="start-onboarding" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200">
-                    Get Started
-                </button>
+                <div class="space-y-4">
+                    <button id="start-onboarding" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400" aria-label="Start Onboarding">
+                        Get Started
+                    </button>
+                    <button id="sign-in-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Sign In">
+                        Sign In to Save Progress
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- Onboarding Flow -->
-        <div id="onboarding" class="hidden fixed inset-0 bg-white z-30">
+        <div id="onboarding" class="hidden fixed inset-0 bg-white z-30 transition-opacity duration-500" role="dialog" aria-modal="true" aria-label="Onboarding Flow">
             <div class="max-w-2xl mx-auto p-6 h-full flex flex-col">
                 <!-- Progress Bar -->
                 <div class="mb-8">
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-sm text-gray-600">Step <span id="current-step">1</span> of 6</span>
-                        <span class="text-sm text-gray-600"><span id="progress-percentage">17</span>%</span>
+                        <span class="text-sm text-gray-600">Step <span id="current-step">1</span> of 7</span>
+                        <span class="text-sm text-gray-600"><span id="progress-percentage">14</span>%</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div id="progress-bar" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 17%"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-2" aria-hidden="true">
+                        <div id="progress-bar" class="bg-green-500 h-2 rounded-full transition-all duration-300" style="width: 14%"></div>
                     </div>
                 </div>
 
                 <!-- Question Container -->
-                <div id="question-container" class="flex-1 flex flex-col justify-center">
+                <div id="question-container" class="flex-1 flex flex-col justify-center transition-all duration-500" tabindex="0" aria-live="polite">
                     <!-- Questions will be dynamically inserted here -->
                 </div>
 
                 <!-- Navigation -->
                 <div class="flex justify-between mt-8">
-                    <button id="prev-btn" class="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200">
+                    <button id="prev-btn" class="px-6 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400" aria-label="Previous Step">
                         ← Previous
                     </button>
-                    <button id="next-btn" class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200">
+                    <button id="next-btn" class="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400" aria-label="Next Step">
                         Next →
                     </button>
                 </div>
@@ -98,6 +108,9 @@
                             </button>
                             <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
                                 <i data-lucide="settings" class="w-5 h-5"></i>
+                            </button>
+                            <button id="sign-out-btn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
+                                <i data-lucide="log-out" class="w-5 h-5"></i>
                             </button>
                         </div>
                     </div>
@@ -153,6 +166,9 @@
                                 New Quote
                             </button>
                         </div>
+
+                        <!-- Lock Screen Widget Preview -->
+                        <div id="widget-preview" class="hidden mt-6"></div>
 
                         <!-- Progress Summary -->
                         <div id="progress-card" class="bg-white rounded-2xl shadow-lg p-6">
@@ -251,5 +267,38 @@
 
     <!-- JavaScript -->
     <script src="app.js"></script>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+            <h2 class="text-2xl font-bold mb-6">Create Your FocusFlow Account</h2>
+            <p class="text-gray-600 mb-6">Save your progress, preferences, and focus history to your device</p>
+            
+            <form id="email-auth-form" class="space-y-4">
+                <input type="email" id="auth-email" class="w-full p-3 border rounded-lg" placeholder="Email" required>
+                <input type="password" id="auth-password" class="w-full p-3 border rounded-lg" placeholder="Password" required>
+                <button type="submit" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg transition">Sign In / Sign Up</button>
+            </form>
+            
+            <div class="my-4 text-gray-500">or</div>
+            
+            <button id="google-signin" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition mb-2">
+                <i data-lucide="chrome" class="w-5 h-5 inline mr-2"></i>
+                Sign in with Google
+            </button>
+            
+            <button id="apple-signin" class="w-full bg-black hover:bg-gray-900 text-white font-semibold py-3 rounded-lg transition mb-2">
+                <i data-lucide="apple" class="w-5 h-5 inline mr-2"></i>
+                Sign in with Apple
+            </button>
+            
+            <button id="guest-mode" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 rounded-lg transition">
+                Continue as Guest
+            </button>
+            
+            <div class="mt-6 text-sm text-gray-400 cursor-pointer" id="close-auth">Cancel</div>
+        </div>
+    </div>
+
 </body>
 </html> 

@@ -1,5 +1,88 @@
 /* FocusFlow Custom Styles */
 
+/* Enhanced Transitions and Animations */
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.slide-in {
+    animation: slideIn 0.5s ease-out;
+}
+
+.scale-in {
+    animation: scaleIn 0.4s ease-out;
+}
+
+.question-transition {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.question-transition.fade-out {
+    opacity: 0;
+    transform: translateX(-20px);
+}
+
+.question-transition.fade-in {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.progress-transition {
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.button-transition:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Welcome Screen Animations */
+.welcome-fade-in {
+    animation: welcomeFadeIn 0.8s ease-out;
+}
+
+@keyframes welcomeFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Onboarding Animations */
+.onboarding-slide {
+    animation: onboardingSlide 0.6s ease-out;
+}
+
+@keyframes onboardingSlide {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 /* Custom Properties for Theme Colors */
 :root {
     --zen-primary: #6B7280;
@@ -894,3 +977,4 @@ body.dark-theme, body.dark-theme h1, body.dark-theme h2, body.dark-theme h3, bod
 }
 .zen-mode.dark-theme .hidden-in-zen {
   display: none !important;
+}
