@@ -187,6 +187,37 @@
                         <!-- Lock Screen Widget Preview -->
                         <div id="widget-preview" class="hidden mt-6"></div>
 
+                        <!-- Smart Schedule -->
+                        <div id="schedule-card" class="bg-white rounded-2xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Today's Schedule</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="sunrise" class="w-4 h-4 text-blue-600"></i>
+                                        <span class="text-sm font-medium text-blue-800">Wake-up</span>
+                                    </div>
+                                    <span id="wake-up-display" class="text-sm font-mono text-blue-600">06:00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="target" class="w-4 h-4 text-green-600"></i>
+                                        <span class="text-sm font-medium text-green-800">Focus Window</span>
+                                    </div>
+                                    <span id="focus-window-display" class="text-sm font-mono text-green-600">09:00-17:00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="moon" class="w-4 h-4 text-purple-600"></i>
+                                        <span class="text-sm font-medium text-purple-800">Bedtime</span>
+                                    </div>
+                                    <span id="bedtime-display" class="text-sm font-mono text-purple-600">23:00</span>
+                                </div>
+                            </div>
+                            <button id="edit-schedule-btn" class="w-full mt-4 text-sm text-green-600 hover:text-green-700 transition-colors duration-200">
+                                Edit Schedule
+                            </button>
+                        </div>
+
                         <!-- Progress Summary -->
                         <div id="progress-card" class="bg-white rounded-2xl shadow-lg p-6">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4">Today's Progress</h3>
@@ -258,6 +289,46 @@
                             </div>
                         </div>
 
+                        <!-- Smart Scheduling -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Smart Scheduling</h3>
+                            <div class="space-y-4">
+                                <!-- Wake-up Time -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Wake-up Time</label>
+                                    <input type="time" id="wake-up-time" value="06:00" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    <p class="text-xs text-gray-500">When you want to start your day</p>
+                                </div>
+                                
+                                <!-- Bedtime -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Bedtime</label>
+                                    <input type="time" id="bedtime" value="23:00" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    <p class="text-xs text-gray-500">When you want to wind down</p>
+                                </div>
+                                
+                                <!-- Focus Windows -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Focus Windows</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Start</label>
+                                            <input type="time" id="focus-window-start" value="09:00" 
+                                                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">End</label>
+                                            <input type="time" id="focus-window-end" value="17:00" 
+                                                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Optimal hours for deep focus work</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Notification Settings -->
                         <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-3">Notifications</h3>
@@ -273,6 +344,18 @@
                                 <label class="flex items-center">
                                     <input type="checkbox" id="daily-motivation" class="mr-3">
                                     <span>Daily motivation</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="wake-up-reminders" class="mr-3">
+                                    <span>Morning motivation</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="wind-down-reminders" class="mr-3">
+                                    <span>Wind-down reminders</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="focus-window-reminders" class="mr-3">
+                                    <span>Focus window alerts</span>
                                 </label>
                             </div>
                         </div>

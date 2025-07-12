@@ -16,14 +16,11 @@ class FocusFlowAuth {
         this.apiUrl = 'http://localhost:3001/api';  // Local development
         this.isAuthenticated = false;
         this.currentUser = null;
-        
-        // Use real fetch for local development
-        this.fetch = window.fetch;
     }
 
-    async signUp(email, password) {
+    async signUp(email, password, name = null) {
         try {
-            const response = await this.fetch(`${this.apiUrl}/auth/signup`, {
+            const response = await window.fetch(`${this.apiUrl}/auth/signup`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -31,6 +28,7 @@ class FocusFlowAuth {
                 body: JSON.stringify({
                     email: email,
                     password: password,
+                    name: name,
                     deviceInfo: this.getDeviceInfo()
                 })
             });
@@ -58,7 +56,7 @@ class FocusFlowAuth {
 
     async signIn(email, password) {
         try {
-            const response = await this.fetch(`${this.apiUrl}/auth/signin`, {
+            const response = await window.fetch(`${this.apiUrl}/auth/signin`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -91,11 +89,290 @@ class FocusFlowAuth {
         }
     }
 
+    async signInWithGoogle(googleToken, email, name) {
+        try {
+            const response = await window.fetch(`${this.apiUrl}/auth/google`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    googleToken: googleToken,
+                    email: email,
+                    name: name,
+                    deviceInfo: this.getDeviceInfo()
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.setAuthToken(data.token);
+                this.currentUser = data.user;
+                this.isAuthenticated = true;
+                
+                this.saveUserDataLocally(data.user);
+                
+                console.log('Google sign in successful:', data.user);
+                return { success: true, user: data.user };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Google sign in failed');
+            }
+        } catch (error) {
+            console.error('Google sign in error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async signInWithApple(appleToken, email, name) {
+        try {
+            const response = await window.fetch(`${this.apiUrl}/auth/apple`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    appleToken: appleToken,
+                    email: email,
+                    name: name,
+                    deviceInfo: this.getDeviceInfo()
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.setAuthToken(data.token);
+                this.currentUser = data.user;
+                this.isAuthenticated = true;
+                
+                this.saveUserDataLocally(data.user);
+                
+                console.log('Apple sign in successful:', data.user);
+                return { success: true, user: data.user };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Apple sign in failed');
+            }
+        } catch (error) {
+            console.error('Apple sign in error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async updateProfile(name, preferences) {
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
+        
+        try {
+            const response = await window.fetch(`${this.apiUrl}/user/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                },
+                body: JSON.stringify({
+                    name: name,
+                    preferences: preferences
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.currentUser = data.user;
+                this.saveUserDataLocally(data.user);
+                
+                console.log('Profile updated successfully:', data.user);
+                return { success: true, user: data.user };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Profile update failed');
+            }
+        } catch (error) {
+            console.error('Profile update error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async uploadAvatar(file) {
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
+        
+        try {
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            const response = await window.fetch(`${this.apiUrl}/user/avatar`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                },
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.currentUser.avatar = data.avatar;
+                this.saveUserDataLocally(this.currentUser);
+                
+                console.log('Avatar uploaded successfully:', data.avatar);
+                return { success: true, avatar: data.avatar };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Avatar upload failed');
+            }
+        } catch (error) {
+            console.error('Avatar upload error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async exportUserData() {
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
+        
+        try {
+            const response = await window.fetch(`${this.apiUrl}/user/export`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Create download link
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'focusflow-export.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                console.log('User data exported successfully');
+                return { success: true };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Export failed');
+            }
+        } catch (error) {
+            console.error('Export error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async importUserData(importData) {
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
+        
+        try {
+            const response = await window.fetch(`${this.apiUrl}/user/import`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                },
+                body: JSON.stringify({
+                    importData: importData
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('User data imported successfully:', data.message);
+                return { success: true, message: data.message };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Import failed');
+            }
+        } catch (error) {
+            console.error('Import error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async deleteAccount() {
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
+        
+        try {
+            const response = await window.fetch(`${this.apiUrl}/user/account`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (response.ok) {
+                this.signOut();
+                console.log('Account deleted successfully');
+                return { success: true };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Account deletion failed');
+            }
+        } catch (error) {
+            console.error('Account deletion error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async requestPasswordReset(email) {
+        try {
+            const response = await window.fetch(`${this.apiUrl}/auth/reset-password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Password reset requested:', data.message);
+                return { success: true, message: data.message };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Password reset request failed');
+            }
+        } catch (error) {
+            console.error('Password reset request error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async confirmPasswordReset(token, newPassword) {
+        try {
+            const response = await window.fetch(`${this.apiUrl}/auth/reset-password/confirm`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    token: token,
+                    newPassword: newPassword
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Password reset confirmed:', data.message);
+                return { success: true, message: data.message };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Password reset confirmation failed');
+            }
+        } catch (error) {
+            console.error('Password reset confirmation error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
     async syncProgress(progress) {
         if (!this.isAuthenticated) return false;
         
         try {
-            const response = await this.fetch(`${this.apiUrl}/progress/sync`, {
+            const response = await window.fetch(`${this.apiUrl}/progress/sync`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -125,7 +402,7 @@ class FocusFlowAuth {
         if (!this.isAuthenticated) return null;
         
         try {
-            const response = await this.fetch(`${this.apiUrl}/progress/load`, {
+            const response = await window.fetch(`${this.apiUrl}/progress/load`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${this.getAuthToken()}`
@@ -202,6 +479,30 @@ class FocusFlowAuth {
 
     isUserAuthenticated() {
         return this.isAuthenticated && this.getAuthToken();
+    }
+
+    // Lock screen widget preference methods
+    async updateLockScreenWidgetPreference(enabled) {
+        if (!this.isAuthenticated) return false;
+        
+        try {
+            const preferences = {
+                lockScreenWidget: enabled
+            };
+            
+            const result = await this.updateProfile(null, preferences);
+            return result.success;
+        } catch (error) {
+            console.error('Failed to update lock screen widget preference:', error);
+            return false;
+        }
+    }
+
+    getLockScreenWidgetPreference() {
+        if (this.currentUser && this.currentUser.preferences) {
+            return this.currentUser.preferences.lockScreenWidget || false;
+        }
+        return false;
     }
 }
 
@@ -321,6 +622,21 @@ class FocusFlow {
             totalFocusTime: 0,
             completedSessions: []
         };
+        this.schedule = {
+            wakeUpTime: '06:00',
+            bedtime: '23:00',
+            focusWindowStart: '09:00',
+            focusWindowEnd: '17:00',
+            notifications: {
+                sessionReminders: true,
+                breakReminders: true,
+                dailyMotivation: true,
+                wakeUpReminders: true,
+                windDownReminders: true,
+                focusWindowReminders: true
+            }
+        };
+        this.notificationPermission = false;
         
         this.initializeApp();
     }
@@ -331,6 +647,9 @@ class FocusFlow {
         if (window.lucide) {
             lucide.createIcons();
         }
+
+        // Initialize dark mode
+        this.initializeDarkMode();
 
         // Load progress asynchronously
         this.progress = await this.loadProgress();
@@ -356,6 +675,36 @@ class FocusFlow {
         this.loadUserPreferences();
         this.loadTimerState(); // Load any running timer
         this.updateUI();
+        this.initializeScheduling();
+    }
+
+    initializeDarkMode() {
+        // Check for saved dark mode preference
+        const savedDarkMode = localStorage.getItem('focusflow_dark_mode');
+        
+        // Check for system preference if no saved preference
+        if (savedDarkMode === null) {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (prefersDark) {
+                document.body.classList.add('dark-theme');
+                localStorage.setItem('focusflow_dark_mode', 'true');
+            }
+        } else if (savedDarkMode === 'true') {
+            document.body.classList.add('dark-theme');
+        }
+        
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (localStorage.getItem('focusflow_dark_mode') === null) {
+                if (e.matches) {
+                    document.body.classList.add('dark-theme');
+                    localStorage.setItem('focusflow_dark_mode', 'true');
+                } else {
+                    document.body.classList.remove('dark-theme');
+                    localStorage.setItem('focusflow_dark_mode', 'false');
+                }
+            }
+        });
     }
 
     bindEvents() {
@@ -466,7 +815,14 @@ class FocusFlow {
         // Add dark mode toggle to the moon icon
         if (modeToggleBtn) {
             modeToggleBtn.onclick = () => {
-                document.body.classList.toggle('dark-theme');
+                const isDark = document.body.classList.contains('dark-theme');
+                if (isDark) {
+                    document.body.classList.remove('dark-theme');
+                    localStorage.setItem('focusflow_dark_mode', 'false');
+                } else {
+                    document.body.classList.add('dark-theme');
+                    localStorage.setItem('focusflow_dark_mode', 'true');
+                }
                 this.renderLockScreenWidgetPreview();
                 this.renderUserSummary();
                 this.updateUI();
@@ -981,6 +1337,13 @@ class FocusFlow {
         if (userAccount) {
             saveUserPreferences(this.userPreferences);
             console.log('Preferences saved to user account');
+            
+            // Save lock screen widget preference to cloud if user is authenticated
+            if (focusFlowAuth.isUserAuthenticated()) {
+                const lockScreenEnabled = this.userPreferences.lockScreenWidget === 'yes';
+                focusFlowAuth.updateLockScreenWidgetPreference(lockScreenEnabled);
+                console.log('Lock screen widget preference saved to cloud');
+            }
         } else {
             // Fallback to localStorage
             localStorage.setItem('focusflow_user_preferences', JSON.stringify(this.userPreferences));
@@ -1784,6 +2147,19 @@ class FocusFlow {
         // Update mode-specific styling
         const app = document.getElementById('app');
         app.className = `min-h-screen ${this.currentMode}-mode`;
+        
+        // Update dark mode icon
+        const modeToggleBtn = document.getElementById('mode-toggle');
+        if (modeToggleBtn) {
+            const isDark = document.body.classList.contains('dark-theme');
+            const icon = modeToggleBtn.querySelector('i');
+            if (icon) {
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            }
+        }
     }
 
     renderDailyFocusGoal() {
@@ -1801,7 +2177,225 @@ class FocusFlow {
         let minutes = 25;
         if (this.userPreferences.sessionLength === '90_min') minutes = 90;
         else if (this.userPreferences.sessionLength === '3_plus_hour') minutes = 180;
-        goal.innerHTML = `<span class='font-semibold'>Today’s Focus Goal:</span> ${minutes} minutes`;
+        goal.innerHTML = `<span class='font-semibold'>Today's Focus Goal:</span> ${minutes} minutes`;
+    }
+
+    // Smart Scheduling Methods
+    initializeScheduling() {
+        this.loadSchedule();
+        this.requestNotificationPermission();
+        this.setupScheduleDisplay();
+        this.bindScheduleEvents();
+        this.startScheduleMonitoring();
+    }
+
+    loadSchedule() {
+        const savedSchedule = localStorage.getItem('focusflow_schedule');
+        if (savedSchedule) {
+            this.schedule = { ...this.schedule, ...JSON.parse(savedSchedule) };
+        }
+        this.updateScheduleDisplay();
+    }
+
+    saveSchedule() {
+        localStorage.setItem('focusflow_schedule', JSON.stringify(this.schedule));
+    }
+
+    setupScheduleDisplay() {
+        this.updateScheduleDisplay();
+    }
+
+    updateScheduleDisplay() {
+        const wakeUpDisplay = document.getElementById('wake-up-display');
+        const focusWindowDisplay = document.getElementById('focus-window-display');
+        const bedtimeDisplay = document.getElementById('bedtime-display');
+
+        if (wakeUpDisplay) wakeUpDisplay.textContent = this.schedule.wakeUpTime;
+        if (focusWindowDisplay) focusWindowDisplay.textContent = `${this.schedule.focusWindowStart}-${this.schedule.focusWindowEnd}`;
+        if (bedtimeDisplay) bedtimeDisplay.textContent = this.schedule.bedtime;
+    }
+
+    bindScheduleEvents() {
+        // Edit schedule button
+        document.getElementById('edit-schedule-btn')?.addEventListener('click', () => {
+            this.showSettings();
+        });
+
+        // Schedule settings in settings modal
+        document.getElementById('wake-up-time')?.addEventListener('change', (e) => {
+            this.schedule.wakeUpTime = e.target.value;
+            this.saveSchedule();
+            this.updateScheduleDisplay();
+        });
+
+        document.getElementById('bedtime')?.addEventListener('change', (e) => {
+            this.schedule.bedtime = e.target.value;
+            this.saveSchedule();
+            this.updateScheduleDisplay();
+        });
+
+        document.getElementById('focus-window-start')?.addEventListener('change', (e) => {
+            this.schedule.focusWindowStart = e.target.value;
+            this.saveSchedule();
+            this.updateScheduleDisplay();
+        });
+
+        document.getElementById('focus-window-end')?.addEventListener('change', (e) => {
+            this.schedule.focusWindowEnd = e.target.value;
+            this.saveSchedule();
+            this.updateScheduleDisplay();
+        });
+
+        // Notification settings
+        document.getElementById('session-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.sessionReminders = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('break-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.breakReminders = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('daily-motivation')?.addEventListener('change', (e) => {
+            this.schedule.notifications.dailyMotivation = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('wake-up-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.wakeUpReminders = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('wind-down-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.windDownReminders = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('focus-window-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.focusWindowReminders = e.target.checked;
+            this.saveSchedule();
+        });
+    }
+
+    async requestNotificationPermission() {
+        if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            this.notificationPermission = permission === 'granted';
+            console.log('Notification permission:', permission);
+        }
+    }
+
+    startScheduleMonitoring() {
+        // Check schedule every minute
+        setInterval(() => {
+            this.checkSchedule();
+        }, 60000);
+
+        // Initial check
+        this.checkSchedule();
+    }
+
+    checkSchedule() {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0, 5);
+        const currentHour = now.getHours();
+
+        // Wake-up reminder
+        if (this.schedule.notifications.wakeUpReminders && 
+            currentTime === this.schedule.wakeUpTime) {
+            this.showNotification('Good Morning! 🌅', 'Time to start your day with focus and purpose.');
+        }
+
+        // Focus window reminder
+        if (this.schedule.notifications.focusWindowReminders && 
+            currentTime === this.schedule.focusWindowStart) {
+            this.showNotification('Focus Window Open 🎯', 'Your optimal focus time has begun. Ready to dive deep?');
+        }
+
+        // Wind-down reminder
+        if (this.schedule.notifications.windDownReminders && 
+            currentTime === this.schedule.bedtime) {
+            this.showNotification('Time to Wind Down 🌙', 'Great work today! Time to relax and prepare for tomorrow.');
+        }
+
+        // Daily motivation (once per day at 9 AM)
+        if (this.schedule.notifications.dailyMotivation && 
+            currentTime === '09:00' && 
+            !localStorage.getItem('focusflow_daily_motivation_' + now.toDateString())) {
+            this.showDailyMotivation();
+            localStorage.setItem('focusflow_daily_motivation_' + now.toDateString(), 'true');
+        }
+    }
+
+    showNotification(title, message) {
+        if (this.notificationPermission) {
+            new Notification(title, {
+                body: message,
+                icon: '/manifest.json',
+                badge: '/manifest.json',
+                tag: 'focusflow-notification'
+            });
+        } else {
+            // Fallback to browser alert
+            this.showBrowserNotification(title, message);
+        }
+    }
+
+    showBrowserNotification(title, message) {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 p-4 bg-white rounded-lg shadow-lg border-l-4 border-green-500 z-50 max-w-sm fade-in';
+        notification.innerHTML = `
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                    <i data-lucide="bell" class="w-5 h-5 text-green-500"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-900">${title}</h4>
+                    <p class="text-sm text-gray-600 mt-1">${message}</p>
+                </div>
+                <button class="flex-shrink-0 text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.remove()">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+
+        // Update icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    showDailyMotivation() {
+        const quote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+        this.showNotification('Daily Motivation 💪', `"${quote.text}" - ${quote.author}`);
+    }
+
+    isInFocusWindow() {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0, 5);
+        return currentTime >= this.schedule.focusWindowStart && currentTime <= this.schedule.focusWindowEnd;
+    }
+
+    getNextFocusSession() {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0, 5);
+        
+        if (currentTime < this.schedule.focusWindowStart) {
+            return `Next focus session starts at ${this.schedule.focusWindowStart}`;
+        } else if (currentTime > this.schedule.focusWindowEnd) {
+            return 'Focus window closed for today';
+        } else {
+            return 'You\'re in your focus window!';
+        }
     }
 }
 
