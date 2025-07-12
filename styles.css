@@ -13,6 +13,108 @@
     animation: scaleIn 0.4s ease-out;
 }
 
+/* Apple-style Animations */
+.question-fade-in {
+    animation: questionFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.question-transition {
+    transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.question-transition.fade-out {
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+.question-transition.fade-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@keyframes questionFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.onboarding-enter {
+    animation: onboardingEnter 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes onboardingEnter {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.radio-option-selected {
+    animation: radioSelected 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes radioSelected {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.01);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Custom Timer Modal Animations */
+.custom-timer-modal-enter {
+    animation: modalEnter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Smooth scrolling for question container */
+#question-container {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(59, 130, 246, 0.3) transparent;
+}
+
+#question-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+#question-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#question-container::-webkit-scrollbar-thumb {
+    background-color: rgba(59, 130, 246, 0.3);
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+#question-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(59, 130, 246, 0.5);
+}
+
 .question-transition {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -38,6 +140,39 @@
 .button-transition:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Calming Radio option styling */
+.radio-option {
+    transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.radio-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+}
+
+.radio-option input[type="radio"] {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.radio-option input[type="radio"]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    ring: none !important;
+}
+
+.radio-option input[type="radio"]:checked + span {
+    color: #1e40af;
+    font-weight: 500;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.95));
+    border-color: #3b82f6;
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px);
 }
 
 /* Welcome Screen Animations */
@@ -82,6 +217,8 @@
         transform: scale(1);
     }
 }
+
+
 
 /* Custom Properties for Theme Colors */
 :root {
@@ -553,7 +690,39 @@
 }
 
 .progress-ring-circle {
-    transition: stroke-dasharray 0.3s ease;
+    transition: stroke-dashoffset 0.5s ease-in-out;
+    stroke-dasharray: 339.292;
+    stroke-dashoffset: 339.292;
+}
+
+/* Timer active state */
+.timer-active {
+    background: linear-gradient(135deg, #F0FDF4, #DCFCE7);
+    border: 2px solid #10B981;
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}
+
+.timer-active #timer-display {
+    color: #059669;
+    font-weight: 600;
+}
+
+/* Session type specific colors */
+.session-quick-focus .progress-ring-circle {
+    stroke: #3B82F6;
+}
+
+.session-deep-work .progress-ring-circle {
+    stroke: #8B5CF6;
+}
+
+.session-marathon .progress-ring-circle {
+    stroke: #F59E0B;
+}
+
+.session-custom .progress-ring-circle {
+    stroke: #10B981;
 }
 
 /* Quote Card Animations */

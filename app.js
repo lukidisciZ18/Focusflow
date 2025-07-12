@@ -9,37 +9,210 @@ function hideAuthModal() {
     document.getElementById('auth-modal').classList.add('hidden');
 }
 
-// Enhanced Authentication System with Device Storage
-function authenticateUser(email, password) {
-    // Create a unique user ID based on email and device
-    const deviceId = getDeviceId();
-    const userId = 'user_' + btoa(email + deviceId).replace(/[^a-zA-Z0-9]/g, '');
-    
-    // Save user account to device storage
-    const userAccount = {
-        id: userId,
-        email: email,
-        createdAt: new Date().toISOString(),
-        lastLogin: new Date().toISOString(),
-        preferences: {},
-        progress: {
-            todayMinutes: 0,
-            totalSessions: 0,
-            streak: 0,
-            lastSessionDate: null,
-            totalFocusTime: 0,
-            completedSessions: []
+// Real Authentication System with Cloud Sync
+class FocusFlowAuth {
+    constructor() {
+        // Use real API URL - replace with your deployed backend URL
+        this.apiUrl = process.env.NODE_ENV === 'production' 
+            ? 'https://your-backend-domain.com/api'  // Replace with your actual backend URL
+            : 'http://localhost:3001/api';  // Local development
+        this.isAuthenticated = false;
+        this.currentUser = null;
+        
+        // Use real fetch in production, mock for testing
+        if (process.env.NODE_ENV === 'production' || !window.mockFetch) {
+            this.fetch = window.fetch;
+        } else {
+            this.fetch = window.mockFetch;
         }
-    };
-    
-    // Save to localStorage with user-specific keys
-    localStorage.setItem('focusflow_user_id', userId);
-    localStorage.setItem('focusflow_user_email', email);
-    localStorage.setItem(`focusflow_user_${userId}`, JSON.stringify(userAccount));
-    
-    console.log('User account created:', userAccount);
-    return true;
+    }
+
+    async signUp(email, password) {
+        try {
+            const response = await this.fetch(`${this.apiUrl}/auth/signup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    deviceInfo: this.getDeviceInfo()
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.setAuthToken(data.token);
+                this.currentUser = data.user;
+                this.isAuthenticated = true;
+                
+                // Save user data locally for offline access
+                this.saveUserDataLocally(data.user);
+                
+                console.log('User signed up successfully:', data.user);
+                return { success: true, user: data.user };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Sign up failed');
+            }
+        } catch (error) {
+            console.error('Sign up error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async signIn(email, password) {
+        try {
+            const response = await this.fetch(`${this.apiUrl}/auth/signin`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password,
+                    deviceInfo: this.getDeviceInfo()
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.setAuthToken(data.token);
+                this.currentUser = data.user;
+                this.isAuthenticated = true;
+                
+                // Save user data locally for offline access
+                this.saveUserDataLocally(data.user);
+                
+                console.log('User signed in successfully:', data.user);
+                return { success: true, user: data.user };
+            } else {
+                const error = await response.json();
+                throw new Error(error.message || 'Sign in failed');
+            }
+        } catch (error) {
+            console.error('Sign in error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async syncProgress(progress) {
+        if (!this.isAuthenticated) return false;
+        
+        try {
+            const response = await this.fetch(`${this.apiUrl}/progress/sync`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                },
+                body: JSON.stringify({
+                    progress: progress,
+                    lastSync: new Date().toISOString()
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Progress synced successfully:', data);
+                return true;
+            } else {
+                console.error('Failed to sync progress');
+                return false;
+            }
+        } catch (error) {
+            console.error('Sync error:', error);
+            return false;
+        }
+    }
+
+    async loadProgress() {
+        if (!this.isAuthenticated) return null;
+        
+        try {
+            const response = await this.fetch(`${this.apiUrl}/progress/load`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${this.getAuthToken()}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Progress loaded successfully:', data);
+                return data.progress;
+            } else {
+                console.error('Failed to load progress');
+                return null;
+            }
+        } catch (error) {
+            console.error('Load progress error:', error);
+            return null;
+        }
+    }
+
+    setAuthToken(token) {
+        localStorage.setItem('focusflow_auth_token', token);
+    }
+
+    getAuthToken() {
+        return localStorage.getItem('focusflow_auth_token');
+    }
+
+    getDeviceInfo() {
+        return {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            screenSize: `${screen.width}x${screen.height}`,
+            deviceId: this.getDeviceId()
+        };
+    }
+
+    getDeviceId() {
+        let deviceId = localStorage.getItem('focusflow_device_id');
+        if (!deviceId) {
+            deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('focusflow_device_id', deviceId);
+        }
+        return deviceId;
+    }
+
+    saveUserDataLocally(user) {
+        localStorage.setItem('focusflow_user_id', user.id);
+        localStorage.setItem('focusflow_user_email', user.email);
+        localStorage.setItem('focusflow_user_data', JSON.stringify(user));
+    }
+
+    loadUserDataLocally() {
+        const userData = localStorage.getItem('focusflow_user_data');
+        if (userData) {
+            this.currentUser = JSON.parse(userData);
+            this.isAuthenticated = true;
+            return this.currentUser;
+        }
+        return null;
+    }
+
+    signOut() {
+        this.isAuthenticated = false;
+        this.currentUser = null;
+        localStorage.removeItem('focusflow_auth_token');
+        localStorage.removeItem('focusflow_user_id');
+        localStorage.removeItem('focusflow_user_email');
+        localStorage.removeItem('focusflow_user_data');
+        console.log('User signed out');
+    }
+
+    isUserAuthenticated() {
+        return this.isAuthenticated && this.getAuthToken();
+    }
 }
+
+// Initialize authentication
+const focusFlowAuth = new FocusFlowAuth();
 
 function getDeviceId() {
     // Generate a device-specific ID
@@ -146,25 +319,30 @@ class FocusFlow {
         this.isRunning = false;
         this.currentMode = 'zen';
         this.quotes = this.initializeQuotes();
-        this.progress = this.loadProgress();
+        this.progress = {
+            todayMinutes: 0,
+            totalSessions: 0,
+            streak: 0,
+            lastSessionDate: null,
+            totalFocusTime: 0,
+            completedSessions: []
+        };
         
         this.initializeApp();
     }
 
-    initializeApp() {
+    async initializeApp() {
         console.log('initializeApp called');
         // Initialize Lucide icons
         if (window.lucide) {
             lucide.createIcons();
         }
 
-        // Always show welcome screen for new users
-        // Reset onboarding state to ensure proper flow
-        localStorage.removeItem('focusflow_onboarding_completed');
-        localStorage.removeItem('focusflow_user_preferences');
-        
+        // Load progress asynchronously
+        this.progress = await this.loadProgress();
+
         // Check if user is authenticated
-        const isAuthenticated = localStorage.getItem('focusflow_user_id');
+        const isAuthenticated = focusFlowAuth.isUserAuthenticated();
         console.log('isAuthenticated:', isAuthenticated);
         
         if (isAuthenticated) {
@@ -182,6 +360,7 @@ class FocusFlow {
 
         this.bindEvents();
         this.loadUserPreferences();
+        this.loadTimerState(); // Load any running timer
         this.updateUI();
     }
 
@@ -232,16 +411,44 @@ class FocusFlow {
 
         // Timer presets
         document.getElementById('quick-focus')?.addEventListener('click', () => {
+            this.currentSessionType = 'quick-focus';
             this.setTimer(25 * 60);
         });
 
         document.getElementById('deep-work')?.addEventListener('click', () => {
+            this.currentSessionType = 'deep-work';
             this.setTimer(90 * 60);
         });
 
         document.getElementById('marathon')?.addEventListener('click', () => {
+            this.currentSessionType = 'marathon';
             this.setTimer(3 * 60 * 60);
         });
+
+        // Custom timer modal
+        const closeCustomTimerBtn = document.getElementById('close-custom-timer');
+        if (closeCustomTimerBtn) {
+            closeCustomTimerBtn.addEventListener('click', () => {
+                this.hideCustomTimerModal();
+            });
+        }
+
+        const cancelCustomTimerBtn = document.getElementById('cancel-custom-timer');
+        if (cancelCustomTimerBtn) {
+            cancelCustomTimerBtn.addEventListener('click', () => {
+                this.hideCustomTimerModal();
+            });
+        }
+
+        const startCustomTimerBtn = document.getElementById('start-custom-timer');
+        if (startCustomTimerBtn) {
+            startCustomTimerBtn.addEventListener('click', () => {
+                console.log('Start custom timer clicked');
+                this.startCustomTimer();
+            });
+        }
+
+
 
         // Settings
         document.getElementById('settings-btn')?.addEventListener('click', () => {
@@ -300,34 +507,50 @@ class FocusFlow {
         };
 
         const emailForm = document.getElementById('email-auth-form');
-        if (emailForm) emailForm.onsubmit = (e) => {
+        if (emailForm) emailForm.onsubmit = async (e) => {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             
-            if (authenticateUser(email, password)) {
-                hideAuthModal();
+            // Show loading state
+            const submitBtn = emailForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating Account...';
+            submitBtn.disabled = true;
+            
+            try {
+                const result = await focusFlowAuth.signUp(email, password);
                 
-                // Show success message
-                const successMessage = document.createElement('div');
-                successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
-                successMessage.innerHTML = `
-                    <div class="flex items-center">
-                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                        <span>Account created! Your progress will be saved to your device.</span>
-                    </div>
-                `;
-                document.body.appendChild(successMessage);
-                
-                // Remove message after 3 seconds
-                setTimeout(() => {
-                    successMessage.style.opacity = '0';
-                    setTimeout(() => successMessage.remove(), 300);
-                }, 3000);
-                
-                this.showWelcomeScreen();
-            } else {
-                alert('Authentication failed. Please try again.');
+                if (result.success) {
+                    hideAuthModal();
+                    
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
+                    successMessage.innerHTML = `
+                        <div class="flex items-center">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                            <span>Account created! Your progress will sync across all devices.</span>
+                        </div>
+                    `;
+                    document.body.appendChild(successMessage);
+                    
+                    // Remove message after 3 seconds
+                    setTimeout(() => {
+                        successMessage.style.opacity = '0';
+                        setTimeout(() => successMessage.remove(), 300);
+                    }, 3000);
+                    
+                    this.showWelcomeScreen();
+                } else {
+                    alert(`Sign up failed: ${result.error}`);
+                }
+            } catch (error) {
+                alert('Network error. Please check your connection and try again.');
+            } finally {
+                // Reset button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         };
 
@@ -434,28 +657,31 @@ class FocusFlow {
             onboarding: !!onboarding
         });
         
-        // Smooth transition from welcome screen to onboarding
+        // Calming transition from welcome screen to onboarding
         if (welcomeScreen) {
-            welcomeScreen.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out';
+            welcomeScreen.style.transition = 'all 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             welcomeScreen.style.opacity = '0';
-            welcomeScreen.style.transform = 'translateY(-20px) scale(0.95)';
+            welcomeScreen.style.transform = 'translateY(-30px) scale(0.98)';
             setTimeout(() => {
                 welcomeScreen.classList.add('hidden');
-            }, 400);
+            }, 1000);
         }
         
-        // Show onboarding with smooth entrance
+        // Show onboarding with calming entrance
         if (onboarding) {
             onboarding.classList.remove('hidden');
             onboarding.style.opacity = '0';
-            onboarding.style.transform = 'translateX(50px)';
-            onboarding.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            onboarding.style.transform = 'translateY(30px) scale(0.98)';
+            onboarding.style.transition = 'all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
             
             setTimeout(() => {
                 onboarding.style.opacity = '1';
-                onboarding.style.transform = 'translateX(0)';
-                this.showQuestion(0);
-            }, 100);
+                onboarding.style.transform = 'translateY(0) scale(1)';
+                // Show first question with a gentle delay
+                setTimeout(() => {
+                    this.showQuestion(0);
+                }, 400);
+            }, 200);
         }
     }
 
@@ -464,6 +690,7 @@ class FocusFlow {
         const questions = [
             {
                 title: "What's your biggest focus challenge?",
+                subtitle: "This helps us personalize your experience",
                 type: "radio",
                 options: [
                     { value: "overwhelmed", label: "I get easily overwhelmed and need gentle guidance" },
@@ -540,15 +767,18 @@ class FocusFlow {
         
         console.log('Question container found:', !!container);
         
-        // Enhanced smooth transition with slide effect
-        container.style.transform = 'translateX(20px)';
+        // Single smooth transition - no separate fade out/in
+        container.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         container.style.opacity = '0';
-        container.style.transition = 'all 0.4s ease-in-out';
+        container.style.transform = 'translateY(10px)';
         
         setTimeout(() => {
             let html = `
-                <div class="text-center" aria-live="polite">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 transform transition-all duration-500" tabindex="0">${question.title}</h2>
+                <div class="space-y-10" aria-live="polite">
+                    <div class="text-center space-y-6">
+                        <h2 class="text-3xl font-light text-slate-800 leading-tight" tabindex="0">${question.title}</h2>
+                        ${question.subtitle ? `<p class="text-lg text-slate-600 leading-relaxed max-w-md mx-auto">${question.subtitle}</p>` : ''}
+                    </div>
             `;
 
             if (question.type === 'widget_preview') {
@@ -556,12 +786,12 @@ class FocusFlow {
             } else if (question.type === 'widget_style') {
                 html += this.generateWidgetStyleSelection(step);
             } else {
-                html += '<div class="space-y-4" role="radiogroup" aria-label="' + question.title + '">';
+                html += '<div class="space-y-4 max-w-2xl mx-auto pb-8" role="radiogroup" aria-label="' + question.title + '">';
                 question.options.forEach((option, index) => {
                     html += `
-                        <label class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-all duration-300 transform hover:scale-105" tabindex="0">
-                            <input type="radio" name="question_${step}" value="${option.value}" class="mr-3" ${index === 0 ? 'checked' : ''} aria-checked="${index === 0 ? 'true' : 'false'}" aria-label="${option.label}">
-                            <span class="text-gray-700">${option.label}</span>
+                        <label class="flex items-center p-6 bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl hover:bg-white/90 hover:border-blue-200 cursor-pointer transition-all duration-500 radio-option shadow-sm hover:shadow-md" tabindex="0">
+                            <input type="radio" name="question_${step}" value="${option.value}" class="mr-4 w-5 h-5 text-blue-600" ${index === 0 ? 'checked' : ''} aria-checked="${index === 0 ? 'true' : 'false'}" aria-label="${option.label}">
+                            <span class="text-slate-700 text-left leading-relaxed text-lg">${option.label}</span>
                         </label>
                     `;
                 });
@@ -570,11 +800,14 @@ class FocusFlow {
             html += '</div>';
             container.innerHTML = html;
             
-            // Smooth fade in with slide effect
-            setTimeout(() => { 
-                container.style.transform = 'translateX(0)';
-                container.style.opacity = '1'; 
-            }, 50);
+            // Smooth fade in with single motion
+            container.style.opacity = '1';
+            container.style.transform = 'translateY(0)';
+            
+            // Clean up transition after completion
+            setTimeout(() => {
+                container.style.transition = '';
+            }, 800);
             
             // Focus management: focus first radio or question title
             const firstRadio = container.querySelector('input[type="radio"]');
@@ -714,11 +947,15 @@ class FocusFlow {
         console.log('Current question found:', !!currentQuestion);
         
         if (!currentQuestion) {
-            // Optionally, visually highlight the question or shake the container
+            // Gentle visual feedback without shaking
             const container = document.getElementById('question-container');
             if (container) {
-                container.classList.add('ring-2', 'ring-red-400');
-                setTimeout(() => container.classList.remove('ring-2', 'ring-red-400'), 600);
+                // Subtle opacity pulse instead of shake
+                container.style.transition = 'opacity 0.3s ease-in-out';
+                container.style.opacity = '0.7';
+                setTimeout(() => {
+                    container.style.opacity = '1';
+                }, 300);
             }
             return;
         }
@@ -727,7 +964,7 @@ class FocusFlow {
         const questionKeys = ['focusChallenge', 'energyPattern', 'primaryGoal', 'motivationStyle', 'sessionLength', 'lockScreenWidget', 'widgetStyle'];
         this.userPreferences[questionKeys[this.currentStep]] = currentQuestion.value;
 
-        if (this.currentStep < 5) {
+        if (this.currentStep < 6) {
             this.currentStep++;
             this.showQuestion(this.currentStep);
         } else {
@@ -779,6 +1016,38 @@ class FocusFlow {
         console.log('Showing main app');
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
+        
+        // Bind custom timer button event listener after main app is shown
+        const customTimerBtn = document.getElementById('custom-timer');
+        console.log('Custom timer button found in showMainApp:', !!customTimerBtn);
+        if (customTimerBtn) {
+            customTimerBtn.addEventListener('click', () => {
+                console.log('Custom timer button clicked');
+                this.showCustomTimerModal();
+            });
+            
+            // Test the button is clickable
+            console.log('Custom timer button text:', customTimerBtn.textContent);
+            console.log('Custom timer button classes:', customTimerBtn.className);
+        } else {
+            console.error('Custom timer button not found in showMainApp!');
+        }
+        
+        // Bind preset button event listeners
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const hours = parseInt(btn.dataset.hours) || 0;
+                const minutes = parseInt(btn.dataset.minutes) || 25;
+                
+                document.getElementById('custom-hours').value = hours;
+                document.getElementById('custom-minutes').value = minutes;
+                
+                // Highlight the selected preset
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('ring-2', 'ring-green-500'));
+                btn.classList.add('ring-2', 'ring-green-500');
+            });
+        });
+        
         this.applyUserPreferences();
         this.updateUI();
     }
@@ -991,16 +1260,27 @@ class FocusFlow {
 
     setTimer(seconds) {
         this.currentTime = seconds;
+        this.originalTime = seconds; // Store original time for progress calculation
         this.updateTimerDisplay();
+        this.updateProgressRing();
         this.showTimerControls();
+        
+        // Save timer state to localStorage for background persistence
+        this.saveTimerState();
     }
 
     startTimer() {
         if (!this.isRunning) {
             this.isRunning = true;
+            this.startTime = Date.now();
+            
+            // Save start time for background persistence
+            this.saveTimerState();
+            
             this.timerInterval = setInterval(() => {
                 this.currentTime--;
                 this.updateTimerDisplay();
+                this.updateProgressRing();
                 
                 if (this.currentTime <= 0) {
                     this.completeSession();
@@ -1009,6 +1289,9 @@ class FocusFlow {
             
             this.showTimerControls();
             this.updateTimerContainer();
+            
+            // Start background timer check
+            this.startBackgroundTimer();
         }
     }
 
@@ -1024,9 +1307,14 @@ class FocusFlow {
         this.isRunning = false;
         clearInterval(this.timerInterval);
         this.currentTime = 0;
+        this.originalTime = 0;
         this.updateTimerDisplay();
+        this.updateProgressRing();
         this.showTimerControls();
         this.updateTimerContainer();
+        
+        // Clear timer state
+        this.clearTimerState();
     }
 
     updateTimerDisplay() {
@@ -1034,6 +1322,70 @@ class FocusFlow {
         const seconds = this.currentTime % 60;
         const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         document.getElementById('timer-display').textContent = display;
+    }
+
+    updateProgressRing() {
+        if (!this.originalTime) return;
+        
+        const progress = ((this.originalTime - this.currentTime) / this.originalTime) * 100;
+        const progressRing = document.getElementById('progress-ring');
+        if (progressRing) {
+            const circle = progressRing.querySelector('.progress-ring-circle');
+            if (circle) {
+                const radius = circle.r.baseVal.value;
+                const circumference = radius * 2 * Math.PI;
+                const offset = circumference - (progress / 100) * circumference;
+                circle.style.strokeDasharray = `${circumference} ${circumference}`;
+                circle.style.strokeDashoffset = offset;
+            }
+        }
+    }
+
+    saveTimerState() {
+        const timerState = {
+            isRunning: this.isRunning,
+            currentTime: this.currentTime,
+            originalTime: this.originalTime,
+            startTime: this.startTime,
+            sessionType: this.currentSessionType
+        };
+        localStorage.setItem('focusflow_timer_state', JSON.stringify(timerState));
+    }
+
+    loadTimerState() {
+        const savedState = localStorage.getItem('focusflow_timer_state');
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            
+            if (state.isRunning && state.startTime) {
+                // Calculate elapsed time since timer was started
+                const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+                const remaining = state.originalTime - elapsed;
+                
+                if (remaining > 0) {
+                    this.currentTime = remaining;
+                    this.originalTime = state.originalTime;
+                    this.currentSessionType = state.sessionType;
+                    this.startTimer(); // Resume timer
+                } else {
+                    // Timer has finished while app was closed
+                    this.completeSession();
+                }
+            }
+        }
+    }
+
+    clearTimerState() {
+        localStorage.removeItem('focusflow_timer_state');
+    }
+
+    startBackgroundTimer() {
+        // Check timer every second even when tab is not active
+        this.backgroundInterval = setInterval(() => {
+            if (this.isRunning) {
+                this.saveTimerState();
+            }
+        }, 1000);
     }
 
     showTimerControls() {
@@ -1093,7 +1445,7 @@ class FocusFlow {
             mode: this.currentMode
         });
         
-        this.saveProgress();
+        this.saveProgress(); // This is now async but we don't need to await it
         
         // Show completion message
         this.showCompletionMessage();
@@ -1103,41 +1455,141 @@ class FocusFlow {
     }
 
     showCompletionMessage() {
-        const messages = [
-            "Great job! You've completed your focus session.",
-            "Excellent work! Your focus is building momentum.",
-            "Outstanding! You're developing strong focus habits.",
-            "Fantastic! Every session makes you stronger.",
-            "Brilliant! You're mastering the art of focus."
-        ];
+        const sessionMessages = {
+            'quick-focus': [
+                "Quick focus session completed! Great momentum building.",
+                "Excellent quick session! You're building focus stamina.",
+                "Perfect! Short sessions lead to big results."
+            ],
+            'deep-work': [
+                "Deep work session completed! You've done serious work.",
+                "Outstanding deep work! You're building expertise.",
+                "Fantastic! Deep work is where mastery happens."
+            ],
+            'marathon': [
+                "Marathon session completed! You're unstoppable!",
+                "Incredible endurance! You've done exceptional work.",
+                "Legendary focus! You've completed a marathon session."
+            ],
+            'custom': [
+                "Custom session completed! You've achieved your goal.",
+                "Excellent work! Your custom session is complete.",
+                "Perfect! You've mastered your own focus rhythm."
+            ]
+        };
         
+        const sessionType = this.currentSessionType || 'custom';
+        const messages = sessionMessages[sessionType] || sessionMessages['custom'];
         const message = messages[Math.floor(Math.random() * messages.length)];
         
-        // Create notification with Zen mode styling
+        // Create celebration notification
         const notification = document.createElement('div');
-        notification.className = 'fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 fade-in';
+        notification.className = 'fixed top-4 right-4 p-6 rounded-2xl shadow-2xl z-50 fade-in';
         
-        // Apply Zen mode styling if in Zen mode
-        if (this.currentMode === 'zen') {
-            notification.style.background = 'linear-gradient(135deg, #F8FAFC, #F1F5F9)';
-            notification.style.color = '#374151';
-            notification.style.border = '1px solid #E5E7EB';
-            notification.style.fontWeight = '500';
+        // Apply session-specific styling
+        if (sessionType === 'quick-focus') {
+            notification.style.background = 'linear-gradient(135deg, #3B82F6, #1D4ED8)';
+        } else if (sessionType === 'deep-work') {
+            notification.style.background = 'linear-gradient(135deg, #8B5CF6, #6D28D9)';
+        } else if (sessionType === 'marathon') {
+            notification.style.background = 'linear-gradient(135deg, #F59E0B, #D97706)';
         } else {
-            notification.className += ' bg-green-500 text-white';
+            notification.style.background = 'linear-gradient(135deg, #10B981, #059669)';
         }
         
-        notification.textContent = message;
+        notification.style.color = 'white';
+        notification.style.fontWeight = '600';
+        notification.style.borderRadius = '16px';
+        notification.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)';
+        
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <div class="text-3xl mr-3">🎉</div>
+                <div>
+                    <div class="font-bold text-lg">Session Complete!</div>
+                    <div class="text-sm opacity-90">${message}</div>
+                </div>
+            </div>
+        `;
+        
         document.body.appendChild(notification);
         
-        // Remove notification after 3 seconds
+        // Add celebration animation
+        notification.style.animation = 'bounce 0.6s ease-out';
+        
+        // Remove notification after 4 seconds
         setTimeout(() => {
             notification.style.opacity = '0';
-            notification.style.transform = 'translateY(-10px)';
+            notification.style.transform = 'translateY(-20px) scale(0.95)';
             setTimeout(() => {
                 notification.remove();
             }, 300);
-        }, 3000);
+        }, 4000);
+    }
+
+    showCustomTimerModal() {
+        console.log('showCustomTimerModal called');
+        const modal = document.getElementById('custom-timer-modal');
+        console.log('Custom timer modal found:', !!modal);
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('custom-timer-modal-enter');
+            console.log('Custom timer modal should now be visible');
+        } else {
+            console.error('Custom timer modal not found!');
+        }
+    }
+
+    hideCustomTimerModal() {
+        console.log('hideCustomTimerModal called');
+        const modal = document.getElementById('custom-timer-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            console.log('Custom timer modal hidden');
+        } else {
+            console.error('Custom timer modal not found for hiding!');
+        }
+    }
+
+    startCustomTimer() {
+        const hours = parseInt(document.getElementById('custom-hours').value) || 0;
+        const minutes = parseInt(document.getElementById('custom-minutes').value) || 25;
+        const sessionType = document.getElementById('custom-session-type').value;
+        
+        const totalSeconds = (hours * 60 + minutes) * 60;
+        
+        console.log('Custom timer values:', { hours, minutes, sessionType, totalSeconds });
+        
+        if (totalSeconds > 0 && totalSeconds <= 12 * 60 * 60) { // Max 12 hours
+            this.currentSessionType = sessionType;
+            this.setTimer(totalSeconds);
+            this.hideCustomTimerModal();
+            
+            // Show confirmation message
+            const hoursDisplay = hours > 0 ? `${hours}h ` : '';
+            const minutesDisplay = minutes > 0 ? `${minutes}m` : '';
+            const durationText = `${hoursDisplay}${minutesDisplay}`.trim();
+            
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i data-lucide="clock" class="w-5 h-5 mr-2"></i>
+                    <span>Custom timer set: ${durationText}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+            
+        } else if (totalSeconds > 12 * 60 * 60) {
+            alert('Maximum duration is 12 hours. Please enter a shorter time.');
+        } else {
+            alert('Please enter a valid duration (at least 1 minute).');
+        }
     }
 
     initializeQuotes() {
@@ -1250,11 +1702,18 @@ class FocusFlow {
         }
     }
 
-    loadProgress() {
-        // Try to load from user account first
-        const userAccount = getUserAccount();
-        if (userAccount && userAccount.progress) {
-            return userAccount.progress;
+    async loadProgress() {
+        // Try to load from cloud if authenticated
+        if (focusFlowAuth.isUserAuthenticated()) {
+            try {
+                const cloudProgress = await focusFlowAuth.loadProgress();
+                if (cloudProgress) {
+                    console.log('Progress loaded from cloud');
+                    return cloudProgress;
+                }
+            } catch (error) {
+                console.error('Failed to load from cloud:', error);
+            }
         }
         
         // Fallback to localStorage
@@ -1269,14 +1728,19 @@ class FocusFlow {
         };
     }
 
-    saveProgress() {
-        // Save to user account if authenticated
-        const userAccount = getUserAccount();
-        if (userAccount) {
-            saveUserProgress(this.progress);
-        } else {
-            // Fallback to localStorage
-            localStorage.setItem('focusflow_progress', JSON.stringify(this.progress));
+    async saveProgress() {
+        // Save locally first for immediate access
+        localStorage.setItem('focusflow_progress', JSON.stringify(this.progress));
+        
+        // Sync to cloud if authenticated
+        if (focusFlowAuth.isUserAuthenticated()) {
+            try {
+                await focusFlowAuth.syncProgress(this.progress);
+                console.log('Progress synced to cloud');
+            } catch (error) {
+                console.error('Failed to sync progress:', error);
+                // Progress is still saved locally
+            }
         }
     }
 
