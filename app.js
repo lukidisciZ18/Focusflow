@@ -12,10 +12,22 @@ function hideAuthModal() {
 // Real Authentication System with Cloud Sync
 class FocusFlowAuth {
     constructor() {
-        // Use real API URL - replace with your deployed backend URL
-        this.apiUrl = 'http://localhost:3001/api';  // Local development
+        // API URL configuration - update this for production deployment
+        // For local development: 'http://localhost:3001/api'
+        // For production: 'https://your-backend-domain.com/api'
+        this.apiUrl = this.getApiUrl();
         this.isAuthenticated = false;
         this.currentUser = null;
+    }
+
+    getApiUrl() {
+        // Check if we're in production (deployed)
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            // Production: use relative URL or your deployed backend URL
+            return window.location.origin.replace('www.', '') + '/api';
+        }
+        // Development: use local backend
+        return 'http://localhost:3001/api';
     }
 
     async signUp(email, password, name = null) {

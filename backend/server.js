@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const { body, validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
+const { OAuth2Client } = require('google-auth-library');
 require('dotenv').config();
 
 const app = express();
@@ -192,6 +193,9 @@ const Progress = mongoose.model('Progress', progressSchema);
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Google OAuth Client
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -382,12 +386,28 @@ app.post('/api/auth/google', async (req, res) => {
   try {
     const { googleToken, deviceInfo } = req.body;
     
-    // In a real implementation, you would verify the Google token
-    // For now, we'll simulate the verification
+    if (!googleToken) {
+      return res.status(400).json({ error: 'Google token is required' });
+    }
+
+    // Verify Google token
+    let ticket;
+    try {
+      ticket = await googleClient.verifyIdToken({
+        idToken: googleToken,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+    } catch (error) {
+      console.error('Google token verification failed:', error);
+      return res.status(401).json({ error: 'Invalid Google token' });
+    }
+
+    const payload = ticket.getPayload();
     const googleUser = {
-      id: 'google_' + Date.now(),
-      email: req.body.email,
-      name: req.body.name
+      id: payload.sub,
+      email: payload.email,
+      name: payload.name,
+      picture: payload.picture
     };
 
     // Find or create user
@@ -406,6 +426,7 @@ app.post('/api/auth/google', async (req, res) => {
         googleId: googleUser.id,
         authProvider: 'google',
         emailVerified: true,
+        avatar: googleUser.picture, // Use Google profile picture
         devices: [{
           deviceId: deviceInfo.deviceId,
           userAgent: deviceInfo.userAgent,
