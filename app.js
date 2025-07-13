@@ -9,57 +9,48 @@ function hideAuthModal() {
     document.getElementById('auth-modal').classList.add('hidden');
 }
 
-// Real Authentication System with Cloud Sync
+// Simple Authentication System with Local Storage
 class FocusFlowAuth {
     constructor() {
-        // API URL configuration - update this for production deployment
-        // For local development: 'http://localhost:3001/api'
-        // For production: 'https://your-backend-domain.com/api'
-        this.apiUrl = this.getApiUrl();
         this.isAuthenticated = false;
         this.currentUser = null;
-    }
-
-    getApiUrl() {
-        // Check if we're in production (deployed)
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            // Production: use relative URL or your deployed backend URL
-            return window.location.origin.replace('www.', '') + '/api';
-        }
-        // Development: use local backend
-        return 'http://localhost:3001/api';
+        this.loadUserDataLocally();
     }
 
     async signUp(email, password, name = null) {
         try {
-            const response = await window.fetch(`${this.apiUrl}/auth/signup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                    name: name,
-                    deviceInfo: this.getDeviceInfo()
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.setAuthToken(data.token);
-                this.currentUser = data.user;
-                this.isAuthenticated = true;
-                
-                // Save user data locally for offline access
-                this.saveUserDataLocally(data.user);
-                
-                console.log('User signed up successfully:', data.user);
-                return { success: true, user: data.user };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Sign up failed');
+            // Check if user already exists
+            const existingUser = this.getUserByEmail(email);
+            if (existingUser) {
+                return { success: false, error: 'User already exists. Please sign in instead.' };
             }
+
+            // Create new user
+            const user = {
+                id: this.generateUserId(),
+                email: email,
+                name: name || email.split('@')[0],
+                createdAt: new Date().toISOString(),
+                preferences: {
+                    mode: 'zen',
+                    lockScreenWidget: true,
+                    widgetStyle: 'zen_minimal'
+                },
+                progress: {
+                    todayMinutes: 0,
+                    totalSessions: 0,
+                    streak: 0,
+                    lastSessionDate: null
+                }
+            };
+
+            // Save user data
+            this.saveUserDataLocally(user);
+            this.currentUser = user;
+            this.isAuthenticated = true;
+
+            console.log('User signed up successfully:', user);
+            return { success: true, user: user };
         } catch (error) {
             console.error('Sign up error:', error);
             return { success: false, error: error.message };
@@ -68,103 +59,99 @@ class FocusFlowAuth {
 
     async signIn(email, password) {
         try {
-            const response = await window.fetch(`${this.apiUrl}/auth/signin`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                    deviceInfo: this.getDeviceInfo()
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.setAuthToken(data.token);
-                this.currentUser = data.user;
-                this.isAuthenticated = true;
-                
-                // Save user data locally for offline access
-                this.saveUserDataLocally(data.user);
-                
-                console.log('User signed in successfully:', data.user);
-                return { success: true, user: data.user };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Sign in failed');
+            // For demo purposes, accept any email/password combination
+            // In a real app, you'd verify the password
+            const user = this.getUserByEmail(email);
+            
+            if (!user) {
+                // Create user if they don't exist (demo behavior)
+                return await this.signUp(email, password);
             }
+
+            this.currentUser = user;
+            this.isAuthenticated = true;
+            this.saveUserDataLocally(user);
+
+            console.log('User signed in successfully:', user);
+            return { success: true, user: user };
         } catch (error) {
             console.error('Sign in error:', error);
             return { success: false, error: error.message };
         }
     }
 
-    async signInWithGoogle(googleToken, email, name) {
+    async signInWithGoogle(email, name) {
         try {
-            const response = await window.fetch(`${this.apiUrl}/auth/google`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    googleToken: googleToken,
+            // Check if user exists
+            let user = this.getUserByEmail(email);
+            
+            if (!user) {
+                // Create new user
+                user = {
+                    id: this.generateUserId(),
                     email: email,
-                    name: name,
-                    deviceInfo: this.getDeviceInfo()
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.setAuthToken(data.token);
-                this.currentUser = data.user;
-                this.isAuthenticated = true;
-                
-                this.saveUserDataLocally(data.user);
-                
-                console.log('Google sign in successful:', data.user);
-                return { success: true, user: data.user };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Google sign in failed');
+                    name: name || email.split('@')[0],
+                    provider: 'google',
+                    createdAt: new Date().toISOString(),
+                    preferences: {
+                        mode: 'zen',
+                        lockScreenWidget: true,
+                        widgetStyle: 'zen_minimal'
+                    },
+                    progress: {
+                        todayMinutes: 0,
+                        totalSessions: 0,
+                        streak: 0,
+                        lastSessionDate: null
+                    }
+                };
             }
+
+            this.currentUser = user;
+            this.isAuthenticated = true;
+            this.saveUserDataLocally(user);
+
+            console.log('Google sign in successful:', user);
+            return { success: true, user: user };
         } catch (error) {
             console.error('Google sign in error:', error);
             return { success: false, error: error.message };
         }
     }
 
-    async signInWithApple(appleToken, email, name) {
+    async signInWithApple(email, name) {
         try {
-            const response = await window.fetch(`${this.apiUrl}/auth/apple`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    appleToken: appleToken,
+            // Check if user exists
+            let user = this.getUserByEmail(email);
+            
+            if (!user) {
+                // Create new user
+                user = {
+                    id: this.generateUserId(),
                     email: email,
-                    name: name,
-                    deviceInfo: this.getDeviceInfo()
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.setAuthToken(data.token);
-                this.currentUser = data.user;
-                this.isAuthenticated = true;
-                
-                this.saveUserDataLocally(data.user);
-                
-                console.log('Apple sign in successful:', data.user);
-                return { success: true, user: data.user };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Apple sign in failed');
+                    name: name || email.split('@')[0],
+                    provider: 'apple',
+                    createdAt: new Date().toISOString(),
+                    preferences: {
+                        mode: 'zen',
+                        lockScreenWidget: true,
+                        widgetStyle: 'zen_minimal'
+                    },
+                    progress: {
+                        todayMinutes: 0,
+                        totalSessions: 0,
+                        streak: 0,
+                        lastSessionDate: null
+                    }
+                };
             }
+
+            this.currentUser = user;
+            this.isAuthenticated = true;
+            this.saveUserDataLocally(user);
+
+            console.log('Apple sign in successful:', user);
+            return { success: true, user: user };
         } catch (error) {
             console.error('Apple sign in error:', error);
             return { success: false, error: error.message };
@@ -175,238 +162,30 @@ class FocusFlowAuth {
         if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
         
         try {
-            const response = await window.fetch(`${this.apiUrl}/user/profile`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                },
-                body: JSON.stringify({
-                    name: name,
-                    preferences: preferences
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.currentUser = data.user;
-                this.saveUserDataLocally(data.user);
-                
-                console.log('Profile updated successfully:', data.user);
-                return { success: true, user: data.user };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Profile update failed');
-            }
+            this.currentUser.name = name || this.currentUser.name;
+            this.currentUser.preferences = { ...this.currentUser.preferences, ...preferences };
+            this.saveUserDataLocally(this.currentUser);
+            
+            console.log('Profile updated successfully:', this.currentUser);
+            return { success: true, user: this.currentUser };
         } catch (error) {
             console.error('Profile update error:', error);
             return { success: false, error: error.message };
         }
     }
 
-    async uploadAvatar(file) {
-        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
-        
-        try {
-            const formData = new FormData();
-            formData.append('avatar', file);
-
-            const response = await window.fetch(`${this.apiUrl}/user/avatar`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                },
-                body: formData
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.currentUser.avatar = data.avatar;
-                this.saveUserDataLocally(this.currentUser);
-                
-                console.log('Avatar uploaded successfully:', data.avatar);
-                return { success: true, avatar: data.avatar };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Avatar upload failed');
-            }
-        } catch (error) {
-            console.error('Avatar upload error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    async exportUserData() {
-        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
-        
-        try {
-            const response = await window.fetch(`${this.apiUrl}/user/export`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                
-                // Create download link
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'focusflow-export.json';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                console.log('User data exported successfully');
-                return { success: true };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Export failed');
-            }
-        } catch (error) {
-            console.error('Export error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    async importUserData(importData) {
-        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
-        
-        try {
-            const response = await window.fetch(`${this.apiUrl}/user/import`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                },
-                body: JSON.stringify({
-                    importData: importData
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('User data imported successfully:', data.message);
-                return { success: true, message: data.message };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Import failed');
-            }
-        } catch (error) {
-            console.error('Import error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    async deleteAccount() {
-        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
-        
-        try {
-            const response = await window.fetch(`${this.apiUrl}/user/account`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
-
-            if (response.ok) {
-                this.signOut();
-                console.log('Account deleted successfully');
-                return { success: true };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Account deletion failed');
-            }
-        } catch (error) {
-            console.error('Account deletion error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    async requestPasswordReset(email) {
-        try {
-            const response = await window.fetch(`${this.apiUrl}/auth/reset-password`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Password reset requested:', data.message);
-                return { success: true, message: data.message };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Password reset request failed');
-            }
-        } catch (error) {
-            console.error('Password reset request error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
-    async confirmPasswordReset(token, newPassword) {
-        try {
-            const response = await window.fetch(`${this.apiUrl}/auth/reset-password/confirm`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    token: token,
-                    newPassword: newPassword
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Password reset confirmed:', data.message);
-                return { success: true, message: data.message };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Password reset confirmation failed');
-            }
-        } catch (error) {
-            console.error('Password reset confirmation error:', error);
-            return { success: false, error: error.message };
-        }
-    }
-
     async syncProgress(progress) {
-        if (!this.isAuthenticated) return false;
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
         
         try {
-            const response = await window.fetch(`${this.apiUrl}/progress/sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                },
-                body: JSON.stringify({
-                    progress: progress,
-                    lastSync: new Date().toISOString()
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Progress synced successfully:', data);
-                return true;
-            } else {
-                console.error('Failed to sync progress');
-                return false;
-            }
+            this.currentUser.progress = { ...this.currentUser.progress, ...progress };
+            this.saveUserDataLocally(this.currentUser);
+            
+            console.log('Progress synced successfully:', this.currentUser.progress);
+            return { success: true, progress: this.currentUser.progress };
         } catch (error) {
-            console.error('Sync error:', error);
-            return false;
+            console.error('Progress sync error:', error);
+            return { success: false, error: error.message };
         }
     }
 
@@ -414,21 +193,12 @@ class FocusFlowAuth {
         if (!this.isAuthenticated) return null;
         
         try {
-            const response = await window.fetch(`${this.apiUrl}/progress/load`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Progress loaded successfully:', data);
-                return data.progress;
-            } else {
-                console.error('Failed to load progress');
-                return null;
-            }
+            return this.currentUser.progress || {
+                todayMinutes: 0,
+                totalSessions: 0,
+                streak: 0,
+                lastSessionDate: null
+            };
         } catch (error) {
             console.error('Load progress error:', error);
             return null;
@@ -467,6 +237,7 @@ class FocusFlowAuth {
         localStorage.setItem('focusflow_user_id', user.id);
         localStorage.setItem('focusflow_user_email', user.email);
         localStorage.setItem('focusflow_user_data', JSON.stringify(user));
+        localStorage.setItem('focusflow_auth_token', 'demo_token_' + user.id);
     }
 
     loadUserDataLocally() {
@@ -482,10 +253,10 @@ class FocusFlowAuth {
     signOut() {
         this.isAuthenticated = false;
         this.currentUser = null;
-        localStorage.removeItem('focusflow_auth_token');
         localStorage.removeItem('focusflow_user_id');
         localStorage.removeItem('focusflow_user_email');
         localStorage.removeItem('focusflow_user_data');
+        localStorage.removeItem('focusflow_auth_token');
         console.log('User signed out');
     }
 
@@ -493,7 +264,6 @@ class FocusFlowAuth {
         return this.isAuthenticated && this.getAuthToken();
     }
 
-    // Lock screen widget preference methods
     async updateLockScreenWidgetPreference(enabled) {
         if (!this.isAuthenticated) return false;
         
@@ -511,78 +281,31 @@ class FocusFlowAuth {
     }
 
     getLockScreenWidgetPreference() {
-        if (this.currentUser && this.currentUser.preferences) {
-            return this.currentUser.preferences.lockScreenWidget || false;
+        if (!this.isAuthenticated) return false;
+        return this.currentUser?.preferences?.lockScreenWidget || false;
+    }
+
+    // Helper methods
+    generateUserId() {
+        return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    getUserByEmail(email) {
+        const userData = localStorage.getItem('focusflow_user_data');
+        if (userData) {
+            const user = JSON.parse(userData);
+            if (user.email === email) {
+                return user;
+            }
         }
-        return false;
+        return null;
     }
 }
 
 // Initialize authentication
 const focusFlowAuth = new FocusFlowAuth();
 
-function getDeviceId() {
-    // Generate a device-specific ID
-    let deviceId = localStorage.getItem('focusflow_device_id');
-    if (!deviceId) {
-        deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('focusflow_device_id', deviceId);
-    }
-    return deviceId;
-}
 
-function getUserAccount() {
-    const userId = localStorage.getItem('focusflow_user_id');
-    if (!userId) return null;
-    
-    const userData = localStorage.getItem(`focusflow_user_${userId}`);
-    return userData ? JSON.parse(userData) : null;
-}
-
-function saveUserProgress(progress) {
-    const userAccount = getUserAccount();
-    if (!userAccount) return;
-    
-    userAccount.progress = { ...userAccount.progress, ...progress };
-    userAccount.lastLogin = new Date().toISOString();
-    
-    localStorage.setItem(`focusflow_user_${userAccount.id}`, JSON.stringify(userAccount));
-    console.log('User progress saved:', userAccount.progress);
-}
-
-function saveUserPreferences(preferences) {
-    const userAccount = getUserAccount();
-    if (!userAccount) return;
-    
-    userAccount.preferences = { ...userAccount.preferences, ...preferences };
-    userAccount.lastLogin = new Date().toISOString();
-    
-    localStorage.setItem(`focusflow_user_${userAccount.id}`, JSON.stringify(userAccount));
-    console.log('User preferences saved:', userAccount.preferences);
-}
-
-function signOut() {
-    const userId = localStorage.getItem('focusflow_user_id');
-    if (userId) {
-        // Remove user-specific data
-        localStorage.removeItem(`focusflow_user_${userId}`);
-    }
-    
-    // Clear all focusflow data
-    const keysToRemove = [
-        'focusflow_user_id',
-        'focusflow_user_email',
-        'focusflow_onboarding_completed',
-        'focusflow_user_preferences',
-        'focusflow_progress',
-        'focusflow_mode'
-    ];
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    
-    console.log('User signed out, all data cleared');
-    window.location.reload();
-}
 
 // Test DOM elements exist
 document.addEventListener('DOMContentLoaded', () => {
@@ -698,21 +421,40 @@ class FocusFlow {
         if (savedDarkMode === null) {
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
             if (prefersDark) {
-                document.body.classList.add('dark-theme');
+                document.documentElement.setAttribute('data-theme', 'dark');
                 localStorage.setItem('focusflow_dark_mode', 'true');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                localStorage.setItem('focusflow_dark_mode', 'false');
             }
         } else if (savedDarkMode === 'true') {
-            document.body.classList.add('dark-theme');
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+        
+        // Debug: Log current theme
+        console.log('Current theme:', document.documentElement.getAttribute('data-theme'));
+        console.log('Dark mode preference:', savedDarkMode);
+        
+        // Set initial dark mode icon
+        const darkModeToggleBtn = document.getElementById('dark-mode-toggle');
+        if (darkModeToggleBtn) {
+            const icon = darkModeToggleBtn.querySelector('i');
+            if (icon) {
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+            }
         }
         
         // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
             if (localStorage.getItem('focusflow_dark_mode') === null) {
                 if (e.matches) {
-                    document.body.classList.add('dark-theme');
+                    document.documentElement.setAttribute('data-theme', 'dark');
                     localStorage.setItem('focusflow_dark_mode', 'true');
                 } else {
-                    document.body.classList.remove('dark-theme');
+                    document.documentElement.setAttribute('data-theme', 'light');
                     localStorage.setItem('focusflow_dark_mode', 'false');
                 }
             }
@@ -816,25 +558,45 @@ class FocusFlow {
 
         // Sign out button
         document.getElementById('sign-out-btn')?.addEventListener('click', () => {
-            signOut();
+            focusFlowAuth.signOut();
+            this.showWelcomeScreen();
         });
 
-        // Only use the settings button to open the settings modal
+        // Dark mode toggle button
+        const darkModeToggleBtn = document.getElementById('dark-mode-toggle');
+        if (darkModeToggleBtn) {
+            darkModeToggleBtn.onclick = () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const isDark = currentTheme === 'dark';
+                
+                if (isDark) {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('focusflow_dark_mode', 'false');
+                    // Update icon to moon
+                    const icon = darkModeToggleBtn.querySelector('i');
+                    if (icon) {
+                        icon.setAttribute('data-lucide', 'moon');
+                    }
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('focusflow_dark_mode', 'true');
+                    // Update icon to sun
+                    const icon = darkModeToggleBtn.querySelector('i');
+                    if (icon) {
+                        icon.setAttribute('data-lucide', 'sun');
+                    }
+                }
+                this.renderLockScreenWidgetPreview();
+                this.renderUserSummary();
+                this.updateUI();
+            };
+        }
+
+        // Mode toggle button - cycles through Zen, Achievement, and Hybrid modes
         const modeToggleBtn = document.getElementById('mode-toggle');
         if (modeToggleBtn) {
-            modeToggleBtn.onclick = null;
-        }
-        // Add dark mode toggle to the moon icon
-        if (modeToggleBtn) {
             modeToggleBtn.onclick = () => {
-                const isDark = document.body.classList.contains('dark-theme');
-                if (isDark) {
-                    document.body.classList.remove('dark-theme');
-                    localStorage.setItem('focusflow_dark_mode', 'false');
-                } else {
-                    document.body.classList.add('dark-theme');
-                    localStorage.setItem('focusflow_dark_mode', 'true');
-                }
+                this.toggleMode();
                 this.renderLockScreenWidgetPreview();
                 this.renderUserSummary();
                 this.updateUI();
@@ -917,58 +679,78 @@ class FocusFlow {
         };
 
         const googleBtn = document.getElementById('google-signin');
-        if (googleBtn) googleBtn.onclick = () => {
+        if (googleBtn) googleBtn.onclick = async () => {
             // Simulate Google sign-in
             const email = 'user@gmail.com';
-            if (authenticateUser(email, 'google')) {
-                hideAuthModal();
+            const name = 'Google User';
+            
+            try {
+                const result = await focusFlowAuth.signInWithGoogle(email, name);
                 
-                // Show success message
-                const successMessage = document.createElement('div');
-                successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
-                successMessage.innerHTML = `
-                    <div class="flex items-center">
-                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                        <span>Account created! Your progress will be saved to your device.</span>
-                    </div>
-                `;
-                document.body.appendChild(successMessage);
-                
-                // Remove message after 3 seconds
-                setTimeout(() => {
-                    successMessage.style.opacity = '0';
-                    setTimeout(() => successMessage.remove(), 300);
-                }, 3000);
-                
-                this.showWelcomeScreen();
+                if (result.success) {
+                    hideAuthModal();
+                    
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
+                    successMessage.innerHTML = `
+                        <div class="flex items-center">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                            <span>Signed in with Google! Your progress will be saved to your device.</span>
+                        </div>
+                    `;
+                    document.body.appendChild(successMessage);
+                    
+                    // Remove message after 3 seconds
+                    setTimeout(() => {
+                        successMessage.style.opacity = '0';
+                        setTimeout(() => successMessage.remove(), 300);
+                    }, 3000);
+                    
+                    this.showWelcomeScreen();
+                } else {
+                    alert(`Google sign-in failed: ${result.error}`);
+                }
+            } catch (error) {
+                alert('Network error. Please check your connection and try again.');
             }
         };
 
         const appleBtn = document.getElementById('apple-signin');
-        if (appleBtn) appleBtn.onclick = () => {
+        if (appleBtn) appleBtn.onclick = async () => {
             // Simulate Apple sign-in
             const email = 'user@icloud.com';
-            if (authenticateUser(email, 'apple')) {
-                hideAuthModal();
+            const name = 'Apple User';
+            
+            try {
+                const result = await focusFlowAuth.signInWithApple(email, name);
                 
-                // Show success message
-                const successMessage = document.createElement('div');
-                successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
-                successMessage.innerHTML = `
-                    <div class="flex items-center">
-                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                        <span>Account created! Your progress will be saved to your device.</span>
-                    </div>
-                `;
-                document.body.appendChild(successMessage);
-                
-                // Remove message after 3 seconds
-                setTimeout(() => {
-                    successMessage.style.opacity = '0';
-                    setTimeout(() => successMessage.remove(), 300);
-                }, 3000);
-                
-                this.showWelcomeScreen();
+                if (result.success) {
+                    hideAuthModal();
+                    
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
+                    successMessage.innerHTML = `
+                        <div class="flex items-center">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                            <span>Signed in with Apple! Your progress will be saved to your device.</span>
+                        </div>
+                    `;
+                    document.body.appendChild(successMessage);
+                    
+                    // Remove message after 3 seconds
+                    setTimeout(() => {
+                        successMessage.style.opacity = '0';
+                        setTimeout(() => successMessage.remove(), 300);
+                    }, 3000);
+                    
+                    this.showWelcomeScreen();
+                } else {
+                    alert(`Apple sign-in failed: ${result.error}`);
+                }
+            } catch (error) {
+                alert('Network error. Please check your connection and try again.');
             }
         };
     }
@@ -1112,15 +894,6 @@ class FocusFlow {
                     { value: "yes", label: "Yes" },
                     { value: "no", label: "No" }
                 ]
-            },
-            {
-                title: "Which lock screen widget style do you prefer?",
-                type: "widget_style",
-                options: [
-                    { value: "zen_minimal", label: "Zen Minimal" },
-                    { value: "achievement_vibrant", label: "Achievement Vibrant" },
-                    { value: "hybrid_adaptive", label: "Hybrid Adaptive" }
-                ]
             }
         ];
 
@@ -1129,10 +902,10 @@ class FocusFlow {
         
         console.log('Question container found:', !!container);
         
-        // Single smooth transition - no separate fade out/in
-        container.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        // Ultra smooth single flow transition
+        container.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         container.style.opacity = '0';
-        container.style.transform = 'translateY(10px)';
+        container.style.transform = 'translateY(3px)';
         
         setTimeout(() => {
             let html = `
@@ -1151,9 +924,9 @@ class FocusFlow {
                 html += '<div class="space-y-4 max-w-2xl mx-auto pb-8" role="radiogroup" aria-label="' + question.title + '">';
                 question.options.forEach((option, index) => {
                     html += `
-                        <label class="flex items-center p-6 bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl hover:bg-white/90 hover:border-blue-200 cursor-pointer transition-all duration-500 radio-option shadow-sm hover:shadow-md" tabindex="0">
+                        <label class="flex items-center p-6 bg-white/95 backdrop-blur-md border border-white/60 rounded-2xl hover:bg-white hover:border-blue-300 cursor-pointer transition-all duration-300 radio-option shadow-lg hover:shadow-xl" tabindex="0">
                             <input type="radio" name="question_${step}" value="${option.value}" class="mr-4 w-5 h-5 text-blue-600" ${index === 0 ? 'checked' : ''} aria-checked="${index === 0 ? 'true' : 'false'}" aria-label="${option.label}">
-                            <span class="text-slate-700 text-left leading-relaxed text-lg">${option.label}</span>
+                            <span class="text-gray-800 text-left leading-relaxed text-lg font-medium">${option.label}</span>
                         </label>
                     `;
                 });
@@ -1162,14 +935,14 @@ class FocusFlow {
             html += '</div>';
             container.innerHTML = html;
             
-            // Smooth fade in with single motion
+            // Ultra smooth single flow fade in
             container.style.opacity = '1';
             container.style.transform = 'translateY(0)';
             
             // Clean up transition after completion
             setTimeout(() => {
                 container.style.transition = '';
-            }, 800);
+            }, 400);
             
             // Focus management: focus first radio or question title
             const firstRadio = container.querySelector('input[type="radio"]');
@@ -1231,28 +1004,29 @@ class FocusFlow {
                 console.log('Previous button clicked'); 
                 this.previousStep(); 
             };
-        }, 200);
+        }, 100);
     }
 
     generateWidgetPreview(step = 5) {
+        console.log('Generating widget preview for step:', step);
         return `
             <div class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="widget-preview-card widget-zen p-4 rounded-lg border">
+                    <div class="widget-preview-card widget-zen p-4 rounded-lg border" style="background: var(--bg-secondary); border-color: var(--border-color);">
                         <div class="text-center">
-                            <div class="text-2xl font-mono text-gray-700">25:00</div>
-                            <div class="text-sm text-gray-600">Focus Session</div>
-                            <div class="text-xs text-gray-500 mt-1">Zen Mode</div>
+                            <div class="text-2xl font-mono" style="color: var(--text-primary);">25:00</div>
+                            <div class="text-sm" style="color: var(--text-secondary);">Focus Session</div>
+                            <div class="text-xs mt-1" style="color: var(--text-muted);">Zen Mode</div>
                         </div>
                     </div>
-                    <div class="widget-preview-card widget-achievement p-4 rounded-lg border">
+                    <div class="widget-preview-card widget-achievement p-4 rounded-lg border" style="background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981;">
                         <div class="text-center">
                             <div class="text-2xl font-mono text-white">25:00</div>
                             <div class="text-sm text-white opacity-90">Focus Session</div>
                             <div class="text-xs text-white opacity-75 mt-1">Achievement Mode</div>
                         </div>
                     </div>
-                    <div class="widget-preview-card widget-hybrid p-4 rounded-lg border">
+                    <div class="widget-preview-card widget-hybrid p-4 rounded-lg border" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6;">
                         <div class="text-center">
                             <div class="text-2xl font-mono text-white">25:00</div>
                             <div class="text-sm text-white opacity-90">Focus Session</div>
@@ -1261,13 +1035,13 @@ class FocusFlow {
                     </div>
                 </div>
                 <div class="space-y-3">
-                    <label class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200">
+                    <label class="flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
                         <input type="radio" name="question_${step}" value="yes" class="mr-3" checked>
-                        <span class="text-gray-700">Yes, show timer on lock screen</span>
+                        <span style="color: var(--text-primary);">Yes, show timer on lock screen</span>
                     </label>
-                    <label class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200">
+                    <label class="flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
                         <input type="radio" name="question_${step}" value="no" class="mr-3">
-                        <span class="text-gray-700">No, keep it simple</span>
+                        <span style="color: var(--text-primary);">No, keep it simple</span>
                     </label>
                 </div>
             </div>
@@ -1278,23 +1052,23 @@ class FocusFlow {
         return `
             <div class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <label class="widget-preview-card widget-zen p-4 rounded-lg border flex flex-col items-center cursor-pointer">
-                        <input type="radio" name="question_${step}" value="zen_minimal" class="mb-2" checked>
-                        <div class="text-2xl font-mono text-gray-700">25:00</div>
-                        <div class="text-sm text-gray-600">Focus Session</div>
-                        <div class="text-xs text-gray-500 mt-1">Zen Minimal</div>
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <input type="radio" name="question_${step}" value="zen_minimal" class="absolute top-2 right-2" checked>
+                        <div class="text-2xl font-mono" style="color: var(--text-primary);">25:00</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">Focus Session</div>
+                        <div class="text-xs mt-1" style="color: var(--text-muted);">Zen Minimal</div>
                     </label>
-                    <label class="widget-preview-card widget-achievement p-4 rounded-lg border flex flex-col items-center cursor-pointer">
-                        <input type="radio" name="question_${step}" value="achievement_vibrant" class="mb-2">
-                        <div class="text-2xl font-mono text-green-600">25:00</div>
-                        <div class="text-sm text-green-700">Focus Session</div>
-                        <div class="text-xs text-green-500 mt-1">Achievement Vibrant</div>
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative" style="background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981;">
+                        <input type="radio" name="question_${step}" value="achievement_vibrant" class="absolute top-2 right-2">
+                        <div class="text-2xl font-mono text-white">25:00</div>
+                        <div class="text-sm text-white opacity-90">Focus Session</div>
+                        <div class="text-xs text-white opacity-75 mt-1">Achievement Vibrant</div>
                     </label>
-                    <label class="widget-preview-card widget-hybrid p-4 rounded-lg border flex flex-col items-center cursor-pointer">
-                        <input type="radio" name="question_${step}" value="hybrid_adaptive" class="mb-2">
-                        <div class="text-2xl font-mono text-purple-600">25:00</div>
-                        <div class="text-sm text-purple-700">Focus Session</div>
-                        <div class="text-xs text-purple-500 mt-1">Hybrid Adaptive</div>
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6;">
+                        <input type="radio" name="question_${step}" value="hybrid_adaptive" class="absolute top-2 right-2">
+                        <div class="text-2xl font-mono text-white">25:00</div>
+                        <div class="text-sm text-white opacity-90">Focus Session</div>
+                        <div class="text-xs text-white opacity-75 mt-1">Hybrid Adaptive</div>
                     </label>
                 </div>
             </div>
@@ -1326,7 +1100,7 @@ class FocusFlow {
         const questionKeys = ['focusChallenge', 'energyPattern', 'primaryGoal', 'motivationStyle', 'sessionLength', 'lockScreenWidget', 'widgetStyle'];
         this.userPreferences[questionKeys[this.currentStep]] = currentQuestion.value;
 
-        if (this.currentStep < 6) {
+        if (this.currentStep < 5) {
             this.currentStep++;
             this.showQuestion(this.currentStep);
         } else {
@@ -1344,21 +1118,20 @@ class FocusFlow {
     completeOnboarding() {
         console.log('Completing onboarding');
         
-        // Save user preferences to account if authenticated
-        const userAccount = getUserAccount();
-        if (userAccount) {
-            saveUserPreferences(this.userPreferences);
-            console.log('Preferences saved to user account');
+        // Save user preferences
+        if (focusFlowAuth.isUserAuthenticated()) {
+            // User is authenticated, save to their account
+            focusFlowAuth.updateProfile(null, this.userPreferences);
+            console.log('Preferences saved to authenticated user account');
             
-            // Save lock screen widget preference to cloud if user is authenticated
-            if (focusFlowAuth.isUserAuthenticated()) {
-                const lockScreenEnabled = this.userPreferences.lockScreenWidget === 'yes';
-                focusFlowAuth.updateLockScreenWidgetPreference(lockScreenEnabled);
-                console.log('Lock screen widget preference saved to cloud');
-            }
+            // Save lock screen widget preference
+            const lockScreenEnabled = this.userPreferences.lockScreenWidget === 'yes';
+            focusFlowAuth.updateLockScreenWidgetPreference(lockScreenEnabled);
+            console.log('Lock screen widget preference saved');
         } else {
-            // Fallback to localStorage
+            // User is not authenticated, save to localStorage
             localStorage.setItem('focusflow_user_preferences', JSON.stringify(this.userPreferences));
+            console.log('Preferences saved to localStorage');
         }
         
         localStorage.setItem('focusflow_onboarding_completed', 'true');
@@ -1367,18 +1140,9 @@ class FocusFlow {
         const mode = this.userPreferences.motivationStyle === 'achievement_tracking' ? 'achievement' : 'zen';
         this.setMode(mode);
         
-        // Check if user is authenticated
-        const isAuthenticated = localStorage.getItem('focusflow_user_id');
-        const isGuest = localStorage.getItem('focusflow_guest') === 'true';
-        
-        if (!isAuthenticated && !isGuest) {
-            // Show auth modal to save progress
-            showAuthModal();
-        } else {
-            // User is authenticated or guest, show main app
-            document.getElementById('onboarding').classList.add('hidden');
-            this.showMainApp();
-        }
+        // Hide onboarding and show main app
+        document.getElementById('onboarding').classList.add('hidden');
+        this.showMainApp();
     }
 
     showMainApp() {
@@ -1418,6 +1182,7 @@ class FocusFlow {
         });
         
         this.applyUserPreferences();
+        this.initializeAnalytics();
         this.updateUI();
     }
 
@@ -1440,9 +1205,20 @@ class FocusFlow {
     renderLockScreenWidgetPreview() {
         const preview = document.getElementById('widget-preview');
         if (!preview) return;
+        
+        // Check if user wants to show the lock screen widget
+        const lockScreenEnabled = this.userPreferences.lockScreenWidget === 'yes';
+        
+        if (!lockScreenEnabled) {
+            // Hide the widget if user selected "no"
+            preview.classList.add('hidden');
+            return;
+        }
+        
         let style = this.userPreferences.widgetStyle || 'zen_minimal';
         let isDark = document.body.classList.contains('dark-theme');
         let html = '';
+        
         if (style === 'zen_minimal') {
             html = `<div class="p-4 rounded-lg border ${isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-700 border-gray-200'} text-center">
                 <div class="text-2xl font-mono ${isDark ? 'text-white' : 'text-gray-700'}">25:00</div>
@@ -1462,6 +1238,7 @@ class FocusFlow {
                 <div class="text-xs mt-1">Hybrid Adaptive</div>
             </div>`;
         }
+        
         preview.innerHTML = html;
         preview.classList.remove('hidden');
     }
@@ -1478,15 +1255,17 @@ class FocusFlow {
             dashboard.prepend(summary);
         }
         
-        const userAccount = getUserAccount();
         let accountInfo = '';
-        if (userAccount) {
-            const totalHours = Math.floor(userAccount.progress.totalFocusTime / 60);
-            const totalMinutes = userAccount.progress.totalFocusTime % 60;
-            accountInfo = `<div class="text-xs text-blue-600 mb-2">
-                <i data-lucide="user" class="w-3 h-3 inline mr-1"></i>
-                Account: ${userAccount.email} • Total Focus: ${totalHours}h ${totalMinutes}m
-            </div>`;
+        if (focusFlowAuth.isUserAuthenticated()) {
+            const user = focusFlowAuth.currentUser;
+            if (user && user.progress) {
+                const totalHours = Math.floor(user.progress.totalFocusTime / 60) || 0;
+                const totalMinutes = (user.progress.totalFocusTime % 60) || 0;
+                accountInfo = `<div class="text-xs text-blue-600 mb-2">
+                    <i data-lucide="user" class="w-3 h-3 inline mr-1"></i>
+                    Account: ${user.email} • Total Focus: ${totalHours}h ${totalMinutes}m
+                </div>`;
+            }
         }
         
         summary.innerHTML = `
@@ -1500,12 +1279,11 @@ class FocusFlow {
     }
 
     loadUserPreferences() {
-        // Try to load from user account first
-        const userAccount = getUserAccount();
-        if (userAccount && userAccount.preferences) {
-            this.userPreferences = userAccount.preferences;
+        // Try to load from authenticated user first
+        if (focusFlowAuth.isUserAuthenticated() && focusFlowAuth.currentUser?.preferences) {
+            this.userPreferences = focusFlowAuth.currentUser.preferences;
         } else {
-            // Fallback to old localStorage method
+            // Fallback to localStorage method
             const saved = localStorage.getItem('focusflow_user_preferences');
             if (saved) {
                 this.userPreferences = JSON.parse(saved);
@@ -1530,7 +1308,10 @@ class FocusFlow {
         
         console.log('Body classes after mode change:', document.body.className);
         
-        // Zen mode specific enhancements
+        // Always reset styles first to ensure clean transitions
+        this.resetAllModeStyles();
+        
+        // Apply mode-specific enhancements
         if (mode === 'zen') {
             this.enhanceZenMode();
         } else if (mode === 'achievement') {
@@ -1543,37 +1324,183 @@ class FocusFlow {
     }
 
     enhanceZenMode() {
-        console.log('Enhancing Zen mode');
-        // Remove vibrant/gamified UI
-        document.querySelectorAll('.hidden-in-zen').forEach(el => el.classList.add('hidden'));
-        // Minimal timer controls
+        console.log('Enhancing Zen mode - Creating pure, calming experience');
+        
+        // Reset all inline styles that might have been applied by other modes
+        this.resetAllModeStyles();
+        
+        // Apply Zen-specific styling for a truly calming experience
+        const timerContainer = document.getElementById('timer-container');
+        if (timerContainer) {
+            timerContainer.style.background = 'rgba(255, 255, 255, 0.95)';
+            timerContainer.style.backdropFilter = 'blur(20px)';
+            timerContainer.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+            timerContainer.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
+            timerContainer.style.borderRadius = '16px';
+            timerContainer.style.transition = 'all 0.3s ease';
+        }
+
+        // Zen timer display - clean, minimal, calming
         const timerDisplay = document.getElementById('timer-display');
         if (timerDisplay) {
-            timerDisplay.style.fontFamily = "'JetBrains Mono', 'Fira Code', 'Monaco', monospace";
+            timerDisplay.style.fontFamily = "'Inter', sans-serif";
             timerDisplay.style.fontWeight = '300';
-            timerDisplay.style.color = '#374151';
-            timerDisplay.style.background = 'none';
+            timerDisplay.style.fontSize = '3rem';
+            timerDisplay.style.color = '#1e293b';
             timerDisplay.style.textShadow = 'none';
+            timerDisplay.style.background = 'none';
+            timerDisplay.style.letterSpacing = '0.05em';
+            timerDisplay.style.transition = 'all 0.3s ease';
         }
-        // Muted progress bar
-        const progressBar = document.getElementById('progress-bar');
-        if (progressBar) {
-            progressBar.style.background = '#6B7280';
-            progressBar.style.height = '4px';
-            progressBar.style.borderRadius = '2px';
-        }
-        // Muted card backgrounds
-        ['progress-card', 'quote-card', 'user-summary'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.style.background = '#F5F5F5';
-                el.style.color = '#4B5563';
-                el.style.border = '1px solid #E5E7EB';
-                el.style.boxShadow = 'none';
+
+        // Zen progress ring - subtle, calming
+        const progressRing = document.getElementById('progress-ring');
+        if (progressRing) {
+            const circle = progressRing.querySelector('.progress-ring-circle');
+            if (circle) {
+                circle.style.stroke = '#10b981';
+                circle.style.strokeWidth = '3';
+                circle.style.strokeLinecap = 'round';
+                circle.style.transition = 'all 0.3s ease';
             }
+        }
+
+        // Zen buttons - minimal, calming
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.style.background = 'rgba(255, 255, 255, 0.9)';
+            button.style.color = '#1e293b';
+            button.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+            button.style.backdropFilter = 'blur(10px)';
+            button.style.borderRadius = '8px';
+            button.style.transition = 'all 0.3s ease';
+            button.style.fontWeight = '400';
+            button.style.textShadow = 'none';
+            button.style.boxShadow = 'none';
         });
-        // Show daily focus goal
+
+        // Zen primary buttons - subtle green
+        const primaryButtons = document.querySelectorAll('#start-timer, #pause-timer, #stop-timer');
+        primaryButtons.forEach(button => {
+            button.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.fontWeight = '500';
+        });
+
+        // Zen session type buttons - muted colors
+        const sessionButtons = document.querySelectorAll('#quick-focus, #deep-work, #marathon, #custom-timer');
+        const sessionColors = {
+            'quick-focus': '#6b7280',
+            'deep-work': '#8b5cf6',
+            'marathon': '#f59e0b',
+            'custom-timer': '#64748b'
+        };
+        
+        sessionButtons.forEach(button => {
+            const buttonId = button.id;
+            const color = sessionColors[buttonId] || '#6b7280';
+            button.style.background = color;
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.fontWeight = '500';
+        });
+
+        // Zen cards - clean, minimal
+        const cards = document.querySelectorAll('#quote-card, #schedule-card, #progress-card');
+        cards.forEach(card => {
+            card.style.background = 'rgba(255, 255, 255, 0.9)';
+            card.style.backdropFilter = 'blur(20px)';
+            card.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+            card.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
+            card.style.borderRadius = '16px';
+            card.style.transition = 'all 0.3s ease';
+        });
+
+        // Zen header - minimal
+        const header = document.querySelector('header');
+        if (header) {
+            header.style.background = 'rgba(255, 255, 255, 0.9)';
+            header.style.backdropFilter = 'blur(20px)';
+            header.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
+            header.style.boxShadow = 'none';
+        }
+
+        // Zen mode toggle buttons
+        const modeButtons = document.querySelectorAll('#mode-toggle, #settings-btn, #sign-out-btn');
+        modeButtons.forEach(button => {
+            button.style.background = 'rgba(255, 255, 255, 0.8)';
+            button.style.color = '#1e293b';
+            button.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+            button.style.borderRadius = '8px';
+            button.style.transition = 'all 0.3s ease';
+        });
+
+        // Zen quote styling
+        const quoteText = document.getElementById('quote-text');
+        if (quoteText) {
+            quoteText.style.color = '#1e293b';
+            quoteText.style.fontStyle = 'italic';
+            quoteText.style.lineHeight = '1.6';
+            quoteText.style.fontSize = '1rem';
+        }
+
+        const quoteAuthor = document.getElementById('quote-author');
+        if (quoteAuthor) {
+            quoteAuthor.style.color = '#64748b';
+            quoteAuthor.style.fontWeight = '500';
+            quoteAuthor.style.fontSize = '0.875rem';
+        }
+
+        // Zen progress styling
+        const progressElements = document.querySelectorAll('#progress-card .space-y-4 > div');
+        progressElements.forEach(element => {
+            element.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
+            element.style.padding = '0.5rem 0';
+            element.style.transition = 'all 0.3s ease';
+        });
+
+        // Zen body background
+        document.body.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)';
+        document.body.style.color = '#1e293b';
+        document.body.style.transition = 'all 0.3s ease';
+
+        // Show daily focus goal with Zen styling
         this.renderDailyFocusGoal();
+        
+        console.log('Zen mode enhanced - Pure, calming experience created');
+    }
+
+    resetAllModeStyles() {
+        // Reset all inline styles that might have been applied by other modes
+        const elementsToReset = [
+            '#timer-container',
+            '#timer-display',
+            '#progress-ring .progress-ring-circle',
+            'button',
+            '#quote-card',
+            '#schedule-card', 
+            '#progress-card',
+            'header',
+            '#mode-toggle',
+            '#settings-btn',
+            '#sign-out-btn',
+            '#quote-text',
+            '#quote-author',
+            '#progress-card .space-y-4 > div'
+        ];
+
+        elementsToReset.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                element.removeAttribute('style');
+            });
+        });
+
+        // Reset body styles
+        document.body.removeAttribute('style');
+        
+        console.log('All mode styles reset');
     }
 
     enhanceAchievementMode() {
@@ -1623,8 +1550,26 @@ class FocusFlow {
         const modes = ['zen', 'achievement', 'hybrid'];
         const currentIndex = modes.indexOf(this.currentMode);
         const nextIndex = (currentIndex + 1) % modes.length;
-        console.log('Toggling from', this.currentMode, 'to', modes[nextIndex]);
-        this.setMode(modes[nextIndex]);
+        const nextMode = modes[nextIndex];
+        
+        console.log('Toggling from', this.currentMode, 'to', nextMode);
+        
+        // Update the mode toggle button icon to reflect the next mode
+        const modeToggleBtn = document.getElementById('mode-toggle');
+        if (modeToggleBtn) {
+            const icon = modeToggleBtn.querySelector('i');
+            if (icon) {
+                const icons = {
+                    'zen': 'moon',
+                    'achievement': 'zap',
+                    'hybrid': 'sun'
+                };
+                icon.setAttribute('data-lucide', icons[nextMode]);
+                lucide.createIcons(); // Recreate icons
+            }
+        }
+        
+        this.setMode(nextMode);
     }
 
     setTimer(seconds) {
@@ -2101,6 +2046,18 @@ class FocusFlow {
         // Save locally first for immediate access
         localStorage.setItem('focusflow_progress', JSON.stringify(this.progress));
         
+        // Save daily progress for analytics
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const dailyProgress = {
+            totalMinutes: this.progress.todayMinutes || 0,
+            sessions: this.progress.totalSessions || 0,
+            completedSessions: this.progress.completedSessions || 0,
+            longestSession: this.progress.longestSession || 0,
+            date: todayStr
+        };
+        localStorage.setItem(`focusflow_${todayStr}`, JSON.stringify(dailyProgress));
+        
         // Sync to cloud if authenticated
         if (focusFlowAuth.isUserAuthenticated()) {
             try {
@@ -2111,6 +2068,11 @@ class FocusFlow {
                 // Progress is still saved locally
             }
         }
+        
+        // Update analytics
+        this.updateStatistics();
+        this.updateGoalProgress();
+        this.generateStreaksCalendar();
     }
 
     calculateStreak() {
@@ -2408,6 +2370,367 @@ class FocusFlow {
         } else {
             return 'You\'re in your focus window!';
         }
+    }
+
+    // Analytics and Progress Tracking
+    initializeAnalytics() {
+        this.bindAnalyticsEvents();
+        this.generateStreaksCalendar();
+        this.renderFocusChart('week');
+        this.updateStatistics();
+        this.updateGoalProgress();
+    }
+
+    bindAnalyticsEvents() {
+        // Analytics tabs
+        document.getElementById('tab-streaks')?.addEventListener('click', () => {
+            this.switchAnalyticsTab('streaks');
+        });
+        
+        document.getElementById('tab-charts')?.addEventListener('click', () => {
+            this.switchAnalyticsTab('charts');
+        });
+        
+        document.getElementById('tab-stats')?.addEventListener('click', () => {
+            this.switchAnalyticsTab('stats');
+        });
+
+        // Chart period buttons
+        document.getElementById('chart-week')?.addEventListener('click', () => {
+            this.switchChartPeriod('week');
+        });
+        
+        document.getElementById('chart-month')?.addEventListener('click', () => {
+            this.switchChartPeriod('month');
+        });
+
+        // Export data button
+        document.getElementById('export-data')?.addEventListener('click', () => {
+            this.exportProgressData();
+        });
+    }
+
+    switchAnalyticsTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.analytics-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+
+        // Update content
+        document.querySelectorAll('.analytics-content').forEach(content => {
+            content.classList.remove('active');
+            content.classList.add('hidden');
+        });
+        document.getElementById(`${tabName}-view`).classList.remove('hidden');
+        document.getElementById(`${tabName}-view`).classList.add('active');
+    }
+
+    switchChartPeriod(period) {
+        // Update period buttons
+        document.querySelectorAll('.chart-period').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById(`chart-${period}`).classList.add('active');
+
+        // Re-render chart
+        this.renderFocusChart(period);
+    }
+
+    generateStreaksCalendar() {
+        const calendar = document.getElementById('streaks-calendar');
+        if (!calendar) return;
+
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        const startDate = new Date(firstDay);
+        startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+        calendar.innerHTML = '';
+
+        // Generate calendar days
+        for (let i = 0; i < 42; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = date.getDate();
+
+            // Check if it's today
+            if (date.toDateString() === today.toDateString()) {
+                dayElement.classList.add('today');
+            }
+            // Check if it's in the current month
+            else if (date.getMonth() !== currentMonth) {
+                dayElement.classList.add('empty');
+            }
+            // Check if there was focus activity on this day
+            else {
+                const focusData = this.getFocusDataForDate(date);
+                if (focusData && focusData.totalMinutes > 0) {
+                    if (focusData.totalMinutes >= 240) { // 4 hours
+                        dayElement.classList.add('completed');
+                    } else {
+                        dayElement.classList.add('partial');
+                    }
+                } else {
+                    dayElement.classList.add('missed');
+                }
+            }
+
+            // Add click event for details
+            dayElement.addEventListener('click', () => {
+                this.showDayDetails(date);
+            });
+
+            calendar.appendChild(dayElement);
+        }
+
+        this.updateStreakCounts();
+    }
+
+    getFocusDataForDate(date) {
+        const dateStr = date.toISOString().split('T')[0];
+        const savedData = localStorage.getItem(`focusflow_${dateStr}`);
+        return savedData ? JSON.parse(savedData) : null;
+    }
+
+    showDayDetails(date) {
+        const focusData = this.getFocusDataForDate(date);
+        const dateStr = date.toLocaleDateString();
+        
+        let message = `Focus activity for ${dateStr}\n\n`;
+        if (focusData) {
+            const hours = Math.floor(focusData.totalMinutes / 60);
+            const minutes = focusData.totalMinutes % 60;
+            message += `Total focus time: ${hours}h ${minutes}m\n`;
+            message += `Sessions completed: ${focusData.sessions || 0}\n`;
+            message += `Average session length: ${Math.round(focusData.totalMinutes / (focusData.sessions || 1))}m`;
+        } else {
+            message += 'No focus activity recorded for this day.';
+        }
+        
+        alert(message);
+    }
+
+    updateStreakCounts() {
+        const currentStreak = this.calculateCurrentStreak();
+        const bestStreak = this.calculateBestStreak();
+        
+        document.getElementById('current-streak-days').textContent = currentStreak;
+        document.getElementById('best-streak-days').textContent = bestStreak;
+    }
+
+    calculateCurrentStreak() {
+        const today = new Date();
+        let streak = 0;
+        let currentDate = new Date(today);
+        
+        while (true) {
+            const focusData = this.getFocusDataForDate(currentDate);
+            if (focusData && focusData.totalMinutes >= 240) { // 4 hours minimum
+                streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+
+    calculateBestStreak() {
+        // This would need more sophisticated logic to track best streak
+        // For now, return a placeholder
+        return Math.max(this.calculateCurrentStreak(), 7);
+    }
+
+    renderFocusChart(period) {
+        const chartContainer = document.getElementById('focus-chart');
+        if (!chartContainer) return;
+
+        chartContainer.innerHTML = '';
+        
+        const data = this.getChartData(period);
+        const maxValue = Math.max(...data.map(d => d.value), 1);
+        
+        data.forEach((item, index) => {
+            const bar = document.createElement('div');
+            bar.className = 'chart-bar';
+            bar.style.height = `${(item.value / maxValue) * 100}%`;
+            bar.style.flex = '1';
+            
+            // Add value label
+            const valueLabel = document.createElement('div');
+            valueLabel.className = 'chart-bar-value';
+            valueLabel.textContent = `${item.value}h`;
+            bar.appendChild(valueLabel);
+            
+            // Add day label
+            const dayLabel = document.createElement('div');
+            dayLabel.className = 'chart-bar-label';
+            dayLabel.textContent = item.label;
+            bar.appendChild(dayLabel);
+            
+            chartContainer.appendChild(bar);
+        });
+
+        this.updateChartStats(data);
+    }
+
+    getChartData(period) {
+        const data = [];
+        const today = new Date();
+        
+        if (period === 'week') {
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const focusData = this.getFocusDataForDate(date);
+                const hours = focusData ? Math.round(focusData.totalMinutes / 60) : 0;
+                
+                data.push({
+                    label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                    value: hours
+                });
+            }
+        } else { // month
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const focusData = this.getFocusDataForDate(date);
+                const hours = focusData ? Math.round(focusData.totalMinutes / 60) : 0;
+                
+                data.push({
+                    label: date.getDate().toString(),
+                    value: hours
+                });
+            }
+        }
+        
+        return data;
+    }
+
+    updateChartStats(data) {
+        const total = data.reduce((sum, item) => sum + item.value, 0);
+        const average = Math.round(total / data.length);
+        
+        document.getElementById('chart-total-hours').textContent = `${total}h`;
+        document.getElementById('chart-avg-hours').textContent = `${average}h`;
+    }
+
+    updateStatistics() {
+        const stats = this.calculateStatistics();
+        
+        document.getElementById('total-focus-hours').textContent = stats.totalHours;
+        document.getElementById('total-sessions').textContent = stats.totalSessions;
+        document.getElementById('avg-session-length').textContent = `${stats.avgSessionLength}m`;
+        document.getElementById('completion-rate').textContent = `${stats.completionRate}%`;
+        
+        // Personal bests
+        document.getElementById('longest-session').textContent = `${stats.longestSession}m`;
+        document.getElementById('most-sessions-day').textContent = stats.mostSessionsDay;
+        document.getElementById('best-streak').textContent = `${stats.bestStreak} days`;
+        document.getElementById('most-hours-day').textContent = `${stats.mostHoursDay}h`;
+    }
+
+    calculateStatistics() {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        let totalMinutes = 0;
+        let totalSessions = 0;
+        let longestSession = 0;
+        let mostSessionsDay = 0;
+        let mostHoursDay = 0;
+        let completedSessions = 0;
+        let totalSessionsAttempted = 0;
+        
+        // Calculate stats from last 30 days
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData) {
+                totalMinutes += focusData.totalMinutes || 0;
+                totalSessions += focusData.sessions || 0;
+                longestSession = Math.max(longestSession, focusData.longestSession || 0);
+                mostSessionsDay = Math.max(mostSessionsDay, focusData.sessions || 0);
+                mostHoursDay = Math.max(mostHoursDay, Math.round((focusData.totalMinutes || 0) / 60));
+                completedSessions += focusData.completedSessions || 0;
+                totalSessionsAttempted += focusData.sessions || 0;
+            }
+        }
+        
+        return {
+            totalHours: Math.round(totalMinutes / 60),
+            totalSessions: totalSessions,
+            avgSessionLength: totalSessions > 0 ? Math.round(totalMinutes / totalSessions) : 0,
+            completionRate: totalSessionsAttempted > 0 ? Math.round((completedSessions / totalSessionsAttempted) * 100) : 0,
+            longestSession: longestSession,
+            mostSessionsDay: mostSessionsDay,
+            bestStreak: this.calculateBestStreak(),
+            mostHoursDay: mostHoursDay
+        };
+    }
+
+    updateGoalProgress() {
+        const today = new Date();
+        const focusData = this.getFocusDataForDate(today);
+        const dailyGoal = 240; // 4 hours in minutes
+        const currentProgress = focusData ? focusData.totalMinutes : 0;
+        const progressPercentage = Math.min((currentProgress / dailyGoal) * 100, 100);
+        
+        document.getElementById('goal-progress-text').textContent = 
+            `${Math.round(currentProgress / 60)}/${Math.round(dailyGoal / 60)}h`;
+        document.getElementById('goal-progress-bar').style.width = `${progressPercentage}%`;
+    }
+
+    exportProgressData() {
+        const data = this.generateExportData();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `focusflow-progress-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Show success message
+        this.showNotification('Data Exported', 'Your progress data has been downloaded successfully.');
+    }
+
+    generateExportData() {
+        const today = new Date();
+        const exportData = {
+            exportDate: today.toISOString(),
+            userPreferences: this.userPreferences,
+            statistics: this.calculateStatistics(),
+            dailyData: {}
+        };
+        
+        // Export last 90 days of data
+        for (let i = 0; i < 90; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData) {
+                exportData.dailyData[dateStr] = focusData;
+            }
+        }
+        
+        return exportData;
     }
 }
 
