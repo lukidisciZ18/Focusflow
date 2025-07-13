@@ -902,10 +902,10 @@ class FocusFlow {
         
         console.log('Question container found:', !!container);
         
-        // Ultra smooth single flow transition
-        container.style.transition = 'all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        // Smooth transition similar to welcome screen to first question
+        container.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         container.style.opacity = '0';
-        container.style.transform = 'translateY(3px)';
+        container.style.transform = 'translateY(-20px) scale(0.98)';
         
         setTimeout(() => {
             let html = `
@@ -935,14 +935,14 @@ class FocusFlow {
             html += '</div>';
             container.innerHTML = html;
             
-            // Ultra smooth single flow fade in
+            // Smooth entrance similar to onboarding entrance
             container.style.opacity = '1';
-            container.style.transform = 'translateY(0)';
+            container.style.transform = 'translateY(0) scale(1)';
             
             // Clean up transition after completion
             setTimeout(() => {
                 container.style.transition = '';
-            }, 400);
+            }, 600);
             
             // Focus management: focus first radio or question title
             const firstRadio = container.querySelector('input[type="radio"]');
@@ -1012,63 +1012,120 @@ class FocusFlow {
         return `
             <div class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="widget-preview-card widget-zen p-4 rounded-lg border" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                    <!-- Zen Mode Widget -->
+                    <div class="widget-preview-card widget-zen p-4 rounded-lg border shadow-lg" style="background: var(--bg-secondary); border-color: var(--border-color);">
                         <div class="text-center">
-                            <div class="text-2xl font-mono" style="color: var(--text-primary);">25:00</div>
-                            <div class="text-sm" style="color: var(--text-secondary);">Focus Session</div>
-                            <div class="text-xs mt-1" style="color: var(--text-muted);">Zen Mode</div>
+                            <div class="text-2xl font-mono font-bold" style="color: var(--text-primary);">25:00</div>
+                            <div class="text-sm font-medium" style="color: var(--text-secondary);">Focus Session</div>
+                            <div class="text-xs mt-1 font-medium" style="color: var(--text-muted);">Zen Mode</div>
+                            <div class="mt-2 flex justify-center space-x-1">
+                                <div class="w-3 h-3 rounded-full bg-gray-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-gray-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-gray-600"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="widget-preview-card widget-achievement p-4 rounded-lg border" style="background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981;">
+                    
+                    <!-- Achievement Mode Widget -->
+                    <div class="widget-preview-card widget-achievement p-4 rounded-lg border shadow-lg" style="background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981;">
                         <div class="text-center">
-                            <div class="text-2xl font-mono text-white">25:00</div>
-                            <div class="text-sm text-white opacity-90">Focus Session</div>
-                            <div class="text-xs text-white opacity-75 mt-1">Achievement Mode</div>
+                            <div class="text-2xl font-mono font-bold text-white">25:00</div>
+                            <div class="text-sm font-medium text-white opacity-90">Focus Session</div>
+                            <div class="text-xs font-medium text-white opacity-75 mt-1">Achievement Mode</div>
+                            <div class="mt-2 flex justify-center space-x-1">
+                                <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-green-600"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="widget-preview-card widget-hybrid p-4 rounded-lg border" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6;">
+                    
+                    <!-- Hybrid Mode Widget -->
+                    <div class="widget-preview-card widget-hybrid p-4 rounded-lg border shadow-lg" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6;">
                         <div class="text-center">
-                            <div class="text-2xl font-mono text-white">25:00</div>
-                            <div class="text-sm text-white opacity-90">Focus Session</div>
-                            <div class="text-xs text-white opacity-75 mt-1">Hybrid Mode</div>
+                            <div class="text-2xl font-mono font-bold text-white">25:00</div>
+                            <div class="text-sm font-medium text-white opacity-90">Focus Session</div>
+                            <div class="text-xs font-medium text-white opacity-75 mt-1">Hybrid Mode</div>
+                            <div class="mt-2 flex justify-center space-x-1">
+                                <div class="w-3 h-3 rounded-full bg-purple-400"></div>
+                                <div class="w-3 h-3 rounded-full bg-purple-500"></div>
+                                <div class="w-3 h-3 rounded-full bg-purple-600"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Mode Color Legend -->
+                <div class="bg-white/90 backdrop-blur-sm rounded-lg p-4 border border-gray-200">
+                    <h4 class="text-sm font-semibold text-black mb-3">Interface Mode Colors:</h4>
+                    <div class="grid grid-cols-3 gap-4 text-xs">
+                        <div class="text-center">
+                            <div class="flex justify-center space-x-1 mb-1">
+                                <div class="w-4 h-4 rounded-full bg-gray-400"></div>
+                                <div class="w-4 h-4 rounded-full bg-gray-500"></div>
+                                <div class="w-4 h-4 rounded-full bg-gray-600"></div>
+                            </div>
+                            <div class="font-medium text-black">Zen Mode</div>
+                            <div class="text-gray-700">Muted Grays</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="flex justify-center space-x-1 mb-1">
+                                <div class="w-4 h-4 rounded-full bg-green-400"></div>
+                                <div class="w-4 h-4 rounded-full bg-green-500"></div>
+                                <div class="w-4 h-4 rounded-full bg-green-600"></div>
+                            </div>
+                            <div class="font-medium text-black">Achievement</div>
+                            <div class="text-gray-700">Vibrant Greens</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="flex justify-center space-x-1 mb-1">
+                                <div class="w-4 h-4 rounded-full bg-purple-400"></div>
+                                <div class="w-4 h-4 rounded-full bg-purple-500"></div>
+                                <div class="w-4 h-4 rounded-full bg-purple-600"></div>
+                            </div>
+                            <div class="font-medium text-black">Hybrid Mode</div>
+                            <div class="text-gray-700">Balanced Purples</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="space-y-3">
-                    <label class="flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                    <label class="flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
                         <input type="radio" name="question_${step}" value="yes" class="mr-3" checked>
-                        <span style="color: var(--text-primary);">Yes, show timer on lock screen</span>
+                        <span class="font-medium" style="color: var(--text-primary);">Yes, show timer on lock screen</span>
                     </label>
-                    <label class="flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
+                    <label class="flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
                         <input type="radio" name="question_${step}" value="no" class="mr-3">
-                        <span style="color: var(--text-primary);">No, keep it simple</span>
+                        <span class="font-medium" style="color: var(--text-primary);">No, keep it simple</span>
                     </label>
                 </div>
             </div>
         `;
     }
 
+
+
     generateWidgetStyleSelection(step) {
         return `
             <div class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative shadow-lg" style="background: var(--bg-secondary); border-color: var(--border-color);">
                         <input type="radio" name="question_${step}" value="zen_minimal" class="absolute top-2 right-2" checked>
-                        <div class="text-2xl font-mono" style="color: var(--text-primary);">25:00</div>
-                        <div class="text-sm" style="color: var(--text-secondary);">Focus Session</div>
-                        <div class="text-xs mt-1" style="color: var(--text-muted);">Zen Minimal</div>
+                        <div class="text-2xl font-mono font-bold" style="color: var(--text-primary);">25:00</div>
+                        <div class="text-sm font-medium" style="color: var(--text-secondary);">Focus Session</div>
+                        <div class="text-xs mt-1 font-medium" style="color: var(--text-muted);">Zen Minimal</div>
                     </label>
-                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative" style="background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981;">
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative shadow-lg" style="background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981;">
                         <input type="radio" name="question_${step}" value="achievement_vibrant" class="absolute top-2 right-2">
-                        <div class="text-2xl font-mono text-white">25:00</div>
-                        <div class="text-sm text-white opacity-90">Focus Session</div>
-                        <div class="text-xs text-white opacity-75 mt-1">Achievement Vibrant</div>
+                        <div class="text-2xl font-mono font-bold text-white">25:00</div>
+                        <div class="text-sm font-medium text-white opacity-90">Focus Session</div>
+                        <div class="text-xs font-medium text-white opacity-75 mt-1">Achievement Vibrant</div>
                     </label>
-                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6;">
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative shadow-lg" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6;">
                         <input type="radio" name="question_${step}" value="hybrid_adaptive" class="absolute top-2 right-2">
-                        <div class="text-2xl font-mono text-white">25:00</div>
-                        <div class="text-sm text-white opacity-90">Focus Session</div>
-                        <div class="text-xs text-white opacity-75 mt-1">Hybrid Adaptive</div>
+                        <div class="text-2xl font-mono font-bold text-white">25:00</div>
+                        <div class="text-sm font-medium text-white opacity-90">Focus Session</div>
+                        <div class="text-xs font-medium text-white opacity-75 mt-1">Hybrid Adaptive</div>
                     </label>
                 </div>
             </div>
@@ -2099,6 +2156,9 @@ class FocusFlow {
 
     showSettings() {
         document.getElementById('settings-modal').classList.remove('hidden');
+        
+        // Add distraction settings to the modal
+        this.addDistractionSettingsToUI();
     }
 
     hideSettings() {
@@ -2375,10 +2435,99 @@ class FocusFlow {
     // Analytics and Progress Tracking
     initializeAnalytics() {
         this.bindAnalyticsEvents();
-        this.generateStreaksCalendar();
+        this.generateEnhancedStreaksCalendar();
         this.renderFocusChart('week');
         this.updateStatistics();
         this.updateGoalProgress();
+        
+        // Initialize enhanced analytics features
+        this.initializeEnhancedAnalytics();
+        
+        // Initialize distraction management
+        this.initializeDistractionManagement();
+    }
+
+    initializeEnhancedAnalytics() {
+        // Add session count to chart stats if element exists
+        const chartStats = document.querySelector('#charts-view .flex.justify-between');
+        if (chartStats && !document.getElementById('chart-total-sessions')) {
+            const sessionElement = document.createElement('span');
+            sessionElement.id = 'chart-total-sessions';
+            sessionElement.className = 'text-xs text-gray-500';
+            sessionElement.textContent = '0 sessions';
+            chartStats.appendChild(sessionElement);
+        }
+        
+        // Initialize insights data
+        this.updateInsightsData();
+        
+        // Add enhanced calendar features
+        this.enhanceCalendarFeatures();
+    }
+
+    enhanceCalendarFeatures() {
+        // Add legend to calendar
+        const calendarContainer = document.getElementById('streaks-view');
+        if (calendarContainer && !document.getElementById('calendar-legend')) {
+            const legend = document.createElement('div');
+            legend.id = 'calendar-legend';
+            legend.className = 'flex justify-center space-x-4 mt-3 text-xs';
+            legend.innerHTML = `
+                <div class="flex items-center space-x-1">
+                    <div class="w-3 h-3 bg-green-500 rounded"></div>
+                    <span>Goal achieved</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <div class="w-3 h-3 bg-yellow-500 rounded"></div>
+                    <span>Partial progress</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <div class="w-3 h-3 bg-red-500 rounded"></div>
+                    <span>No activity</span>
+                </div>
+            `;
+            calendarContainer.appendChild(legend);
+        }
+        
+        // Generate sample data for demonstration
+        this.generateSampleData();
+    }
+
+    generateSampleData() {
+        // Only generate sample data if no real data exists
+        const today = new Date();
+        const hasRealData = this.getFocusDataForDate(today);
+        
+        if (!hasRealData) {
+            // Generate sample data for the last 30 days
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                // Skip weekends occasionally and add some variation
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const random = Math.random();
+                
+                if (!isWeekend || random > 0.3) { // 70% chance of weekend activity
+                    const minutes = Math.floor(Math.random() * 480) + 120; // 2-10 hours
+                    const sessions = Math.floor(Math.random() * 5) + 1; // 1-5 sessions
+                    const completedSessions = Math.floor(sessions * 0.8); // 80% completion rate
+                    const longestSession = Math.floor(minutes / sessions) + Math.floor(Math.random() * 30);
+                    
+                    const sampleData = {
+                        totalMinutes: minutes,
+                        sessions: sessions,
+                        completedSessions: completedSessions,
+                        longestSession: longestSession,
+                        date: dateStr
+                    };
+                    
+                    localStorage.setItem(`focusflow_${dateStr}`, JSON.stringify(sampleData));
+                }
+            }
+        }
     }
 
     bindAnalyticsEvents() {
@@ -2393,6 +2542,11 @@ class FocusFlow {
         
         document.getElementById('tab-stats')?.addEventListener('click', () => {
             this.switchAnalyticsTab('stats');
+        });
+        
+        document.getElementById('tab-insights')?.addEventListener('click', () => {
+            this.switchAnalyticsTab('insights');
+            this.updateInsightsData();
         });
 
         // Chart period buttons
@@ -2544,9 +2698,26 @@ class FocusFlow {
     }
 
     calculateBestStreak() {
-        // This would need more sophisticated logic to track best streak
-        // For now, return a placeholder
-        return Math.max(this.calculateCurrentStreak(), 7);
+        // Enhanced best streak calculation
+        const today = new Date();
+        let bestStreak = 0;
+        let currentStreak = 0;
+        
+        // Check last 365 days for the best streak
+        for (let i = 365; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData && focusData.totalMinutes >= 240) { // 4 hours minimum
+                currentStreak++;
+                bestStreak = Math.max(bestStreak, currentStreak);
+            } else {
+                currentStreak = 0;
+            }
+        }
+        
+        return bestStreak;
     }
 
     renderFocusChart(period) {
@@ -2563,18 +2734,34 @@ class FocusFlow {
             bar.className = 'chart-bar';
             bar.style.height = `${(item.value / maxValue) * 100}%`;
             bar.style.flex = '1';
+            bar.style.position = 'relative';
             
             // Add value label
             const valueLabel = document.createElement('div');
             valueLabel.className = 'chart-bar-value';
             valueLabel.textContent = `${item.value}h`;
+            valueLabel.style.position = 'absolute';
+            valueLabel.style.top = '-20px';
+            valueLabel.style.left = '50%';
+            valueLabel.style.transform = 'translateX(-50%)';
+            valueLabel.style.fontSize = '10px';
+            valueLabel.style.fontWeight = '600';
             bar.appendChild(valueLabel);
             
             // Add day label
             const dayLabel = document.createElement('div');
             dayLabel.className = 'chart-bar-label';
             dayLabel.textContent = item.label;
+            dayLabel.style.position = 'absolute';
+            dayLabel.style.bottom = '-20px';
+            dayLabel.style.left = '50%';
+            dayLabel.style.transform = 'translateX(-50%)';
+            dayLabel.style.fontSize = '10px';
+            dayLabel.style.fontWeight = '500';
             bar.appendChild(dayLabel);
+            
+            // Add tooltip
+            bar.title = `${item.label}: ${item.value}h (${item.sessions || 0} sessions)`;
             
             chartContainer.appendChild(bar);
         });
@@ -2595,7 +2782,9 @@ class FocusFlow {
                 
                 data.push({
                     label: date.toLocaleDateString('en-US', { weekday: 'short' }),
-                    value: hours
+                    value: hours,
+                    sessions: focusData ? focusData.sessions : 0,
+                    date: date
                 });
             }
         } else { // month
@@ -2607,7 +2796,9 @@ class FocusFlow {
                 
                 data.push({
                     label: date.getDate().toString(),
-                    value: hours
+                    value: hours,
+                    sessions: focusData ? focusData.sessions : 0,
+                    date: date
                 });
             }
         }
@@ -2618,9 +2809,16 @@ class FocusFlow {
     updateChartStats(data) {
         const total = data.reduce((sum, item) => sum + item.value, 0);
         const average = Math.round(total / data.length);
+        const totalSessions = data.reduce((sum, item) => sum + (item.sessions || 0), 0);
         
         document.getElementById('chart-total-hours').textContent = `${total}h`;
         document.getElementById('chart-avg-hours').textContent = `${average}h`;
+        
+        // Add session count if element exists
+        const sessionElement = document.getElementById('chart-total-sessions');
+        if (sessionElement) {
+            sessionElement.textContent = `${totalSessions} sessions`;
+        }
     }
 
     updateStatistics() {
@@ -2636,6 +2834,15 @@ class FocusFlow {
         document.getElementById('most-sessions-day').textContent = stats.mostSessionsDay;
         document.getElementById('best-streak').textContent = `${stats.bestStreak} days`;
         document.getElementById('most-hours-day').textContent = `${stats.mostHoursDay}h`;
+        
+        // Update goal achievement rate if element exists
+        const goalRateElement = document.getElementById('goal-achievement-rate');
+        if (goalRateElement) {
+            goalRateElement.textContent = `${stats.goalAchievementRate}%`;
+        }
+        
+        // Update streak counts
+        this.updateStreakCounts();
     }
 
     calculateStatistics() {
@@ -2650,6 +2857,8 @@ class FocusFlow {
         let mostHoursDay = 0;
         let completedSessions = 0;
         let totalSessionsAttempted = 0;
+        let dailyGoals = 0;
+        let goalsAchieved = 0;
         
         // Calculate stats from last 30 days
         for (let i = 0; i < 30; i++) {
@@ -2665,6 +2874,12 @@ class FocusFlow {
                 mostHoursDay = Math.max(mostHoursDay, Math.round((focusData.totalMinutes || 0) / 60));
                 completedSessions += focusData.completedSessions || 0;
                 totalSessionsAttempted += focusData.sessions || 0;
+                
+                // Track daily goal achievement
+                dailyGoals++;
+                if ((focusData.totalMinutes || 0) >= 240) { // 4 hours goal
+                    goalsAchieved++;
+                }
             }
         }
         
@@ -2676,7 +2891,8 @@ class FocusFlow {
             longestSession: longestSession,
             mostSessionsDay: mostSessionsDay,
             bestStreak: this.calculateBestStreak(),
-            mostHoursDay: mostHoursDay
+            mostHoursDay: mostHoursDay,
+            goalAchievementRate: dailyGoals > 0 ? Math.round((goalsAchieved / dailyGoals) * 100) : 0
         };
     }
 
@@ -2690,23 +2906,127 @@ class FocusFlow {
         document.getElementById('goal-progress-text').textContent = 
             `${Math.round(currentProgress / 60)}/${Math.round(dailyGoal / 60)}h`;
         document.getElementById('goal-progress-bar').style.width = `${progressPercentage}%`;
+        
+        // Update progress color based on completion
+        const progressBar = document.getElementById('goal-progress-bar');
+        if (progressPercentage >= 100) {
+            progressBar.style.backgroundColor = '#10B981'; // Green for completed
+        } else if (progressPercentage >= 75) {
+            progressBar.style.backgroundColor = '#F59E0B'; // Yellow for close
+        } else {
+            progressBar.style.backgroundColor = '#EF4444'; // Red for far from goal
+        }
     }
 
     exportProgressData() {
         const data = this.generateExportData();
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
         
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `focusflow-progress-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        // Create multiple export formats
+        const formats = [
+            { name: 'JSON', data: JSON.stringify(data, null, 2), type: 'application/json', ext: 'json' },
+            { name: 'CSV', data: this.convertToCSV(data), type: 'text/csv', ext: 'csv' },
+            { name: 'Summary', data: this.generateSummaryReport(data), type: 'text/plain', ext: 'txt' }
+        ];
         
-        // Show success message
-        this.showNotification('Data Exported', 'Your progress data has been downloaded successfully.');
+        // Show export options modal
+        this.showExportOptionsModal(formats);
+    }
+
+    showExportOptionsModal(formats) {
+        // Create modal for export options
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Export Progress Data</h3>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="this.closest('.fixed').remove()">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Choose your preferred export format:</p>
+                <div class="space-y-3">
+                    ${formats.map(format => `
+                        <button class="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" 
+                                onclick="this.downloadData('${format.name}', '${format.data}', '${format.type}', '${format.ext}')">
+                            <div class="font-medium text-gray-800">${format.name}</div>
+                            <div class="text-sm text-gray-500">Download as .${format.ext} file</div>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add download function to window
+        window.downloadData = (name, data, type, ext) => {
+            const blob = new Blob([data], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `focusflow-progress-${new Date().toISOString().split('T')[0]}.${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Close modal and show success message
+            modal.remove();
+            this.showNotification('Data Exported', `Your progress data has been exported as ${name} format.`);
+        };
+    }
+
+    convertToCSV(data) {
+        const headers = ['Date', 'Total Minutes', 'Sessions', 'Completed Sessions', 'Longest Session', 'Goal Achieved'];
+        const rows = [];
+        
+        // Add daily data
+        Object.keys(data.dailyData).forEach(date => {
+            const dayData = data.dailyData[date];
+            rows.push([
+                date,
+                dayData.totalMinutes || 0,
+                dayData.sessions || 0,
+                dayData.completedSessions || 0,
+                dayData.longestSession || 0,
+                (dayData.totalMinutes || 0) >= 240 ? 'Yes' : 'No'
+            ]);
+        });
+        
+        return [headers, ...rows].map(row => row.join(',')).join('\n');
+    }
+
+    generateSummaryReport(data) {
+        const stats = data.statistics;
+        const totalDays = Object.keys(data.dailyData).length;
+        const activeDays = Object.values(data.dailyData).filter(day => day.totalMinutes > 0).length;
+        
+        return `FocusFlow Progress Summary
+Generated: ${new Date().toLocaleDateString()}
+
+OVERALL STATISTICS:
+- Total Focus Hours: ${stats.totalHours}h
+- Total Sessions: ${stats.totalSessions}
+- Average Session Length: ${stats.avgSessionLength}m
+- Completion Rate: ${stats.completionRate}%
+- Best Streak: ${stats.bestStreak} days
+
+PERSONAL BESTS:
+- Longest Session: ${stats.longestSession}m
+- Most Sessions in a Day: ${stats.mostSessionsDay}
+- Most Hours in a Day: ${stats.mostHoursDay}h
+
+ACTIVITY SUMMARY:
+- Total Days Tracked: ${totalDays}
+- Active Days: ${activeDays}
+- Activity Rate: ${Math.round((activeDays / totalDays) * 100)}%
+
+GOAL ACHIEVEMENT:
+- Daily Goal: 4 hours
+- Goal Achievement Rate: ${stats.goalAchievementRate}%
+
+This report was generated by FocusFlow - Your Personal Focus Coach.`;
     }
 
     generateExportData() {
@@ -2715,7 +3035,16 @@ class FocusFlow {
             exportDate: today.toISOString(),
             userPreferences: this.userPreferences,
             statistics: this.calculateStatistics(),
-            dailyData: {}
+            dailyData: {},
+            streaks: {
+                current: this.calculateCurrentStreak(),
+                best: this.calculateBestStreak()
+            },
+            goals: {
+                dailyGoal: 240, // 4 hours in minutes
+                weeklyGoal: 1680, // 28 hours in minutes
+                monthlyGoal: 7200 // 120 hours in minutes
+            }
         };
         
         // Export last 90 days of data
@@ -2726,11 +3055,835 @@ class FocusFlow {
             const focusData = this.getFocusDataForDate(date);
             
             if (focusData) {
-                exportData.dailyData[dateStr] = focusData;
+                exportData.dailyData[dateStr] = {
+                    ...focusData,
+                    goalAchieved: (focusData.totalMinutes || 0) >= 240,
+                    weekNumber: this.getWeekNumber(date),
+                    monthNumber: date.getMonth() + 1
+                };
             }
         }
         
         return exportData;
+    }
+
+    getWeekNumber(date) {
+        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+        const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    }
+
+    // Enhanced streak tracking with detailed analytics
+    calculateDetailedStreaks() {
+        const today = new Date();
+        let currentStreak = 0;
+        let bestStreak = 0;
+        let currentStreakStart = null;
+        let bestStreakStart = null;
+        let bestStreakEnd = null;
+        
+        // Check last 365 days for detailed streak analysis
+        for (let i = 365; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData && focusData.totalMinutes >= 240) {
+                currentStreak++;
+                if (currentStreak === 1) {
+                    currentStreakStart = new Date(date);
+                }
+                
+                if (currentStreak > bestStreak) {
+                    bestStreak = currentStreak;
+                    bestStreakStart = new Date(currentStreakStart);
+                    bestStreakEnd = new Date(date);
+                }
+            } else {
+                currentStreak = 0;
+                currentStreakStart = null;
+            }
+        }
+        
+        return {
+            current: currentStreak,
+            best: bestStreak,
+            currentStart: currentStreakStart,
+            bestStart: bestStreakStart,
+            bestEnd: bestStreakEnd
+        };
+    }
+
+    // Enhanced calendar with more detailed information
+    generateEnhancedStreaksCalendar() {
+        const calendar = document.getElementById('streaks-calendar');
+        if (!calendar) return;
+
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        const startDate = new Date(firstDay);
+        startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+        calendar.innerHTML = '';
+
+        // Generate calendar days with enhanced information
+        for (let i = 0; i < 42; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = date.getDate();
+
+            // Check if it's today
+            if (date.toDateString() === today.toDateString()) {
+                dayElement.classList.add('today');
+            }
+            // Check if it's in the current month
+            else if (date.getMonth() !== currentMonth) {
+                dayElement.classList.add('empty');
+            }
+            // Check if there was focus activity on this day
+            else {
+                const focusData = this.getFocusDataForDate(date);
+                if (focusData && focusData.totalMinutes > 0) {
+                    if (focusData.totalMinutes >= 240) { // 4 hours
+                        dayElement.classList.add('completed');
+                        dayElement.title = `${focusData.totalMinutes} minutes (${focusData.sessions} sessions) - Goal achieved!`;
+                    } else {
+                        dayElement.classList.add('partial');
+                        dayElement.title = `${focusData.totalMinutes} minutes (${focusData.sessions} sessions) - Partial progress`;
+                    }
+                } else {
+                    dayElement.classList.add('missed');
+                    dayElement.title = 'No focus activity recorded';
+                }
+            }
+
+            // Add click event for details
+            dayElement.addEventListener('click', () => {
+                this.showEnhancedDayDetails(date);
+            });
+
+            calendar.appendChild(dayElement);
+        }
+
+        this.updateStreakCounts();
+    }
+
+    showEnhancedDayDetails(date) {
+        const focusData = this.getFocusDataForDate(date);
+        const dateStr = date.toLocaleDateString();
+        
+        let message = `Focus activity for ${dateStr}\n\n`;
+        if (focusData) {
+            const hours = Math.floor(focusData.totalMinutes / 60);
+            const minutes = focusData.totalMinutes % 60;
+            const goalAchieved = focusData.totalMinutes >= 240;
+            
+            message += `Total focus time: ${hours}h ${minutes}m\n`;
+            message += `Sessions completed: ${focusData.sessions || 0}\n`;
+            message += `Average session length: ${Math.round(focusData.totalMinutes / (focusData.sessions || 1))}m\n`;
+            message += `Goal achievement: ${goalAchieved ? '✅ Achieved' : '❌ Not met'}\n`;
+            
+            if (focusData.longestSession) {
+                message += `Longest session: ${focusData.longestSession}m\n`;
+            }
+            
+            if (focusData.completedSessions !== undefined) {
+                message += `Completion rate: ${Math.round((focusData.completedSessions / focusData.sessions) * 100)}%`;
+            }
+        } else {
+            message += 'No focus activity recorded for this day.';
+        }
+        
+        alert(message);
+    }
+
+    updateInsightsData() {
+        const today = new Date();
+        const stats = this.calculateStatistics();
+        
+        // Update goal achievement rate
+        const goalRateElement = document.getElementById('goal-achievement-rate');
+        if (goalRateElement) {
+            goalRateElement.textContent = `${stats.goalAchievementRate}%`;
+        }
+        
+        // Calculate activity rate (days with any focus activity in last 30 days)
+        const activityRate = this.calculateActivityRate();
+        const activityRateElement = document.getElementById('activity-rate');
+        if (activityRateElement) {
+            activityRateElement.textContent = `${activityRate}%`;
+        }
+        
+        // Update weekly progress
+        this.updateWeeklyProgress();
+        
+        // Update productivity patterns
+        this.updateProductivityPatterns();
+    }
+
+    calculateActivityRate() {
+        const today = new Date();
+        let activeDays = 0;
+        
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData && focusData.totalMinutes > 0) {
+                activeDays++;
+            }
+        }
+        
+        return Math.round((activeDays / 30) * 100);
+    }
+
+    updateWeeklyProgress() {
+        const today = new Date();
+        const thisWeekStart = new Date(today);
+        thisWeekStart.setDate(today.getDate() - today.getDay());
+        const lastWeekStart = new Date(thisWeekStart);
+        lastWeekStart.setDate(thisWeekStart.getDate() - 7);
+        
+        let thisWeekHours = 0;
+        let lastWeekHours = 0;
+        
+        // Calculate this week's hours
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(thisWeekStart);
+            date.setDate(thisWeekStart.getDate() + i);
+            const focusData = this.getFocusDataForDate(date);
+            if (focusData) {
+                thisWeekHours += Math.round(focusData.totalMinutes / 60);
+            }
+        }
+        
+        // Calculate last week's hours
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(lastWeekStart);
+            date.setDate(lastWeekStart.getDate() + i);
+            const focusData = this.getFocusDataForDate(date);
+            if (focusData) {
+                lastWeekHours += Math.round(focusData.totalMinutes / 60);
+            }
+        }
+        
+        // Update UI
+        const thisWeekElement = document.getElementById('this-week-hours');
+        const lastWeekElement = document.getElementById('last-week-hours');
+        
+        if (thisWeekElement) thisWeekElement.textContent = `${thisWeekHours}h`;
+        if (lastWeekElement) lastWeekElement.textContent = `${lastWeekHours}h`;
+    }
+
+    updateProductivityPatterns() {
+        const today = new Date();
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayTotals = new Array(7).fill(0);
+        const dayCounts = new Array(7).fill(0);
+        
+        // Calculate productivity by day of week for last 4 weeks
+        for (let i = 0; i < 28; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData && focusData.totalMinutes > 0) {
+                const dayOfWeek = date.getDay();
+                dayTotals[dayOfWeek] += focusData.totalMinutes;
+                dayCounts[dayOfWeek]++;
+            }
+        }
+        
+        // Find best productivity day
+        let bestDayIndex = 0;
+        let bestDayAverage = 0;
+        
+        for (let i = 0; i < 7; i++) {
+            if (dayCounts[i] > 0) {
+                const average = dayTotals[i] / dayCounts[i];
+                if (average > bestDayAverage) {
+                    bestDayAverage = average;
+                    bestDayIndex = i;
+                }
+            }
+        }
+        
+        // Calculate consistency score
+        const activeDays = dayCounts.filter(count => count > 0).length;
+        const consistencyScore = Math.round((activeDays / 7) * 100);
+        
+        // Update UI
+        const bestDayElement = document.getElementById('best-productivity-day');
+        const consistencyElement = document.getElementById('consistency-score');
+        
+        if (bestDayElement) {
+            bestDayElement.textContent = dayNames[bestDayIndex];
+        }
+        
+        if (consistencyElement) {
+            consistencyElement.textContent = `${consistencyScore}%`;
+        }
+        
+        // Peak hours calculation (simplified - could be enhanced with time-based data)
+        const peakHoursElement = document.getElementById('peak-productivity-hours');
+        if (peakHoursElement) {
+            peakHoursElement.textContent = '9AM-11AM'; // Placeholder - could be calculated from actual data
+        }
+    }
+
+    // Distraction Management System
+    initializeDistractionManagement() {
+        this.distractionData = {
+            lastActivity: Date.now(),
+            inactivityThreshold: 30000, // 30 seconds
+            distractionCount: 0,
+            mindfulPauseCount: 0,
+            alternativeActivities: [
+                { name: "Take 3 deep breaths", duration: "30s", type: "mindfulness" },
+                { name: "Stretch your arms", duration: "1m", type: "physical" },
+                { name: "Look out the window", duration: "1m", type: "visual" },
+                { name: "Drink some water", duration: "30s", type: "health" },
+                { name: "Stand up and walk", duration: "2m", type: "movement" },
+                { name: "Close your eyes briefly", duration: "30s", type: "rest" },
+                { name: "Check your posture", duration: "30s", type: "awareness" },
+                { name: "Think of one thing you're grateful for", duration: "1m", type: "mindfulness" }
+            ],
+            focusGoals: [
+                "Complete this session without interruption",
+                "Stay focused for the next 10 minutes",
+                "Achieve deep work state",
+                "Maintain concentration until break",
+                "Build your focus stamina"
+            ],
+            distractionTypes: [
+                "Social media",
+                "Email checking",
+                "Phone notifications",
+                "Daydreaming",
+                "Physical discomfort",
+                "Hunger/thirst",
+                "Noise",
+                "Other tasks",
+                "Boredom",
+                "Anxiety"
+            ]
+        };
+
+        this.loadDistractionSettings();
+        this.startDistractionMonitoring();
+        this.bindDistractionEvents();
+    }
+
+    loadDistractionSettings() {
+        const savedSettings = localStorage.getItem('focusflow_distraction_settings');
+        if (savedSettings) {
+            this.distractionData = { ...this.distractionData, ...JSON.parse(savedSettings) };
+        }
+    }
+
+    saveDistractionSettings() {
+        localStorage.setItem('focusflow_distraction_settings', JSON.stringify(this.distractionData));
+    }
+
+    startDistractionMonitoring() {
+        // Monitor user activity
+        this.distractionInterval = setInterval(() => {
+            this.checkForDistraction();
+        }, 10000); // Check every 10 seconds
+
+        // Track user interactions
+        this.trackUserActivity();
+    }
+
+    trackUserActivity() {
+        const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+        
+        activityEvents.forEach(event => {
+            document.addEventListener(event, () => {
+                this.distractionData.lastActivity = Date.now();
+            }, { passive: true });
+        });
+
+        // Track tab visibility
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.handleTabSwitch();
+            } else {
+                this.distractionData.lastActivity = Date.now();
+            }
+        });
+    }
+
+    checkForDistraction() {
+        if (!this.isRunning) return; // Only check during active sessions
+
+        const timeSinceLastActivity = Date.now() - this.distractionData.lastActivity;
+        
+        if (timeSinceLastActivity > this.distractionData.inactivityThreshold) {
+            this.showMindfulPauseModal();
+        }
+    }
+
+    handleTabSwitch() {
+        if (this.isRunning) {
+            this.distractionData.distractionCount++;
+            this.saveDistractionData();
+            
+            // Show gentle reminder when returning to tab
+            setTimeout(() => {
+                if (!document.hidden && this.isRunning) {
+                    this.showFocusReminder();
+                }
+            }, 1000);
+        }
+    }
+
+    showMindfulPauseModal() {
+        if (this.mindfulPauseShown) return; // Prevent multiple modals
+        
+        this.mindfulPauseShown = true;
+        this.distractionData.mindfulPauseCount++;
+        
+        const modal = document.createElement('div');
+        modal.id = 'mindful-pause-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+                <div class="text-4xl mb-4">🧘</div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Mindful Pause</h3>
+                <p class="text-gray-600 mb-6">It looks like you might be getting distracted. Take a moment to refocus.</p>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-medium text-blue-800 mb-2">Focus Goal</h4>
+                        <p class="text-sm text-blue-600" id="current-focus-goal">${this.getRandomFocusGoal()}</p>
+                    </div>
+                    
+                    <div class="p-4 bg-green-50 rounded-lg">
+                        <h4 class="font-medium text-green-800 mb-2">Alternative Activity</h4>
+                        <p class="text-sm text-green-600" id="suggested-activity">${this.getRandomAlternativeActivity()}</p>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="resume-focus" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Resume Focus
+                    </button>
+                    <button id="take-break" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Take Break
+                    </button>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="flex items-center text-sm text-gray-600">
+                        <input type="checkbox" id="track-distraction" class="mr-2">
+                        Track this distraction (optional)
+                    </label>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Bind modal events
+        document.getElementById('resume-focus').addEventListener('click', () => {
+            this.resumeFocus();
+        });
+        
+        document.getElementById('take-break').addEventListener('click', () => {
+            this.takeBreak();
+        });
+        
+        // Auto-hide after 30 seconds
+        setTimeout(() => {
+            if (document.getElementById('mindful-pause-modal')) {
+                this.resumeFocus();
+            }
+        }, 30000);
+    }
+
+    resumeFocus() {
+        const modal = document.getElementById('mindful-pause-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        this.mindfulPauseShown = false;
+        this.distractionData.lastActivity = Date.now();
+        
+        // Show gentle encouragement
+        this.showEncouragementMessage();
+    }
+
+    takeBreak() {
+        const modal = document.getElementById('mindful-pause-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        this.mindfulPauseShown = false;
+        this.pauseTimer();
+        
+        // Show break suggestions
+        this.showBreakSuggestions();
+    }
+
+    showFocusReminder() {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 p-4 bg-blue-500 text-white rounded-lg shadow-lg z-50 max-w-sm fade-in';
+        notification.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold">Welcome Back!</h4>
+                    <p class="text-sm opacity-90">Your focus session is still running. Ready to continue?</p>
+                </div>
+                <button class="flex-shrink-0 text-white opacity-75 hover:opacity-100" onclick="this.parentElement.parentElement.remove()">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+        
+        // Update icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    showEncouragementMessage() {
+        const messages = [
+            "Great! You're back on track. Keep going! 💪",
+            "Perfect! Your focus is returning. Stay with it! 🎯",
+            "Excellent! You've regained your concentration. 🧠",
+            "Wonderful! You're building focus resilience. 🌟"
+        ];
+        
+        const message = messages[Math.floor(Math.random() * messages.length)];
+        
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 max-w-sm fade-in';
+        notification.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 3000);
+        
+        // Update icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    showBreakSuggestions() {
+        const suggestions = [
+            { activity: "Take a 5-minute walk", icon: "👟", duration: "5m" },
+            { activity: "Do some stretching", icon: "🧘", duration: "3m" },
+            { activity: "Get a glass of water", icon: "💧", duration: "1m" },
+            { activity: "Look out the window", icon: "👁️", duration: "2m" },
+            { activity: "Deep breathing exercise", icon: "🫁", duration: "2m" }
+        ];
+        
+        const modal = document.createElement('div');
+        modal.id = 'break-suggestions-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                <div class="text-center mb-6">
+                    <div class="text-3xl mb-2">☕</div>
+                    <h3 class="text-xl font-semibold text-gray-800">Break Suggestions</h3>
+                    <p class="text-gray-600">Choose an activity to refresh your mind:</p>
+                </div>
+                
+                <div class="space-y-3 mb-6">
+                    ${suggestions.map(suggestion => `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" 
+                             onclick="this.selectBreakActivity('${suggestion.activity}', '${suggestion.duration}')">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">${suggestion.icon}</span>
+                                <div>
+                                    <div class="font-medium text-gray-800">${suggestion.activity}</div>
+                                    <div class="text-sm text-gray-500">${suggestion.duration}</div>
+                                </div>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="this.closeBreakSuggestions()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Close
+                    </button>
+                    <button onclick="this.resumeSession()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Resume Session
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add methods to window for onclick handlers
+        window.selectBreakActivity = (activity, duration) => {
+            this.selectBreakActivity(activity, duration);
+        };
+        
+        window.closeBreakSuggestions = () => {
+            this.closeBreakSuggestions();
+        };
+        
+        window.resumeSession = () => {
+            this.resumeSession();
+        };
+        
+        // Update icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    selectBreakActivity(activity, duration) {
+        const modal = document.getElementById('break-suggestions-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        // Show activity timer
+        this.showActivityTimer(activity, duration);
+    }
+
+    showActivityTimer(activity, duration) {
+        const durationMinutes = parseInt(duration);
+        
+        const modal = document.createElement('div');
+        modal.id = 'activity-timer-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-8 text-center">
+                <div class="text-4xl mb-4">⏰</div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">${activity}</h3>
+                <p class="text-gray-600 mb-6">Take your time and enjoy this break.</p>
+                
+                <div class="text-3xl font-mono text-green-600 mb-6" id="activity-timer-display">${durationMinutes}:00</div>
+                
+                <div class="space-y-3">
+                    <button id="complete-activity" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Complete Activity
+                    </button>
+                    <button id="skip-activity" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Skip
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Start countdown
+        let timeLeft = durationMinutes * 60;
+        const timerDisplay = document.getElementById('activity-timer-display');
+        
+        const countdown = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                this.completeActivity();
+            }
+        }, 1000);
+        
+        // Bind events
+        document.getElementById('complete-activity').addEventListener('click', () => {
+            clearInterval(countdown);
+            this.completeActivity();
+        });
+        
+        document.getElementById('skip-activity').addEventListener('click', () => {
+            clearInterval(countdown);
+            this.skipActivity();
+        });
+    }
+
+    completeActivity() {
+        const modal = document.getElementById('activity-timer-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        // Show completion message
+        this.showNotification('Break Complete! 🌟', 'Great job taking a mindful break. Ready to resume your focus session?');
+        
+        // Resume session after a moment
+        setTimeout(() => {
+            this.resumeSession();
+        }, 2000);
+    }
+
+    skipActivity() {
+        const modal = document.getElementById('activity-timer-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        this.resumeSession();
+    }
+
+    resumeSession() {
+        const modal = document.getElementById('break-suggestions-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        // Resume timer
+        this.startTimer();
+        
+        // Show resumption message
+        this.showNotification('Session Resumed! 🎯', 'Welcome back to your focus session. You\'ve got this!');
+    }
+
+    closeBreakSuggestions() {
+        const modal = document.getElementById('break-suggestions-modal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    getRandomFocusGoal() {
+        return this.distractionData.focusGoals[Math.floor(Math.random() * this.distractionData.focusGoals.length)];
+    }
+
+    getRandomAlternativeActivity() {
+        const activity = this.distractionData.alternativeActivities[Math.floor(Math.random() * this.distractionData.alternativeActivities.length)];
+        return `${activity.name} (${activity.duration})`;
+    }
+
+    saveDistractionData() {
+        const today = new Date().toISOString().split('T')[0];
+        const distractionStats = {
+            date: today,
+            distractionCount: this.distractionData.distractionCount,
+            mindfulPauseCount: this.distractionData.mindfulPauseCount,
+            sessionDuration: this.currentTime || 0
+        };
+        
+        localStorage.setItem(`focusflow_distraction_${today}`, JSON.stringify(distractionStats));
+    }
+
+    bindDistractionEvents() {
+        // Add distraction tracking to settings if not already present
+        this.addDistractionSettingsToUI();
+    }
+
+    addDistractionSettingsToUI() {
+        // This will be called when settings modal is opened
+        const settingsModal = document.getElementById('settings-modal');
+        if (settingsModal && !document.getElementById('distraction-settings')) {
+            // Add distraction settings section to settings modal
+            const settingsContent = settingsModal.querySelector('.space-y-6');
+            if (settingsContent) {
+                const distractionSection = document.createElement('div');
+                distractionSection.id = 'distraction-settings';
+                distractionSection.innerHTML = `
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Distraction Management</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="enable-distraction-tracking" class="mr-3" checked>
+                                    <span>Enable distraction awareness</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">Get gentle reminders when you seem distracted</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Inactivity Threshold</label>
+                                <select id="inactivity-threshold" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    <option value="15000">15 seconds</option>
+                                    <option value="30000" selected>30 seconds</option>
+                                    <option value="60000">1 minute</option>
+                                    <option value="120000">2 minutes</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">How long to wait before showing mindful pause</p>
+                            </div>
+                            
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="track-distractions" class="mr-3">
+                                    <span>Track distraction patterns</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">Save distraction data for insights (optional)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                settingsContent.appendChild(distractionSection);
+                
+                // Bind distraction settings events
+                this.bindDistractionSettingsEvents();
+            }
+        }
+    }
+
+    bindDistractionSettingsEvents() {
+        document.getElementById('enable-distraction-tracking')?.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                this.startDistractionMonitoring();
+            } else {
+                this.stopDistractionMonitoring();
+            }
+        });
+        
+        document.getElementById('inactivity-threshold')?.addEventListener('change', (e) => {
+            this.distractionData.inactivityThreshold = parseInt(e.target.value);
+            this.saveDistractionSettings();
+        });
+        
+        document.getElementById('track-distractions')?.addEventListener('change', (e) => {
+            this.distractionData.trackDistractions = e.target.checked;
+            this.saveDistractionSettings();
+        });
+    }
+
+    stopDistractionMonitoring() {
+        if (this.distractionInterval) {
+            clearInterval(this.distractionInterval);
+        }
     }
 }
 

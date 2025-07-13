@@ -1,28 +1,7 @@
-/* YouTube-inspired Professional Dark Mode */
+/* FocusFlow Dark Mode - Enhanced with CSS Variables */
 
 :root {
-  /* Dark theme colors - YouTube palette (default) */
-  --bg-primary: #0f0f0f;
-  --bg-secondary: #1a1a1a;
-  --bg-tertiary: #212121;
-  --bg-hover: #2a2a2a;
-  
-  --text-primary: #ffffff;
-  --text-secondary: #aaaaaa;
-  --text-muted: #717171;
-  
-  --accent-primary: #ff0000;
-  --accent-hover: #cc0000;
-  
-  --border-color: #303030;
-  --border-hover: #404040;
-  
-  --shadow-light: rgba(255, 255, 255, 0.1);
-  --shadow-dark: rgba(0, 0, 0, 0.5);
-}
-
-/* Light theme colors */
-[data-theme="light"] {
+  /* Light theme colors (default) */
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #e9ecef;
@@ -32,14 +11,35 @@
   --text-secondary: #6c757d;
   --text-muted: #adb5bd;
   
-  --accent-primary: #dc3545;
-  --accent-hover: #c82333;
+  --accent-primary: #10b981;
+  --accent-hover: #059669;
   
   --border-color: #dee2e6;
   --border-hover: #adb5bd;
   
   --shadow-light: rgba(0, 0, 0, 0.1);
   --shadow-dark: rgba(0, 0, 0, 0.2);
+}
+
+/* Dark theme colors */
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #404040;
+  --bg-hover: #505050;
+  
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #808080;
+  
+  --accent-primary: #10b981;
+  --accent-hover: #059669;
+  
+  --border-color: #404040;
+  --border-hover: #505050;
+  
+  --shadow-light: rgba(255, 255, 255, 0.1);
+  --shadow-dark: rgba(0, 0, 0, 0.5);
 }
 
 /* Global styles */
@@ -56,6 +56,8 @@ body {
   line-height: 1.6;
   transition: all 0.3s ease;
 }
+
+
 
 /* Container and layout */
 .container {
@@ -122,6 +124,8 @@ nav {
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px var(--shadow-dark);
 }
+
+
 
 .card:hover {
   background: var(--bg-tertiary);
@@ -375,13 +379,18 @@ input:focus, textarea:focus, select:focus {
 
 /* Onboarding specific styles */
 #onboarding .widget-preview-card {
-  background: var(--bg-secondary);
-  border-color: var(--border-color);
+  background: white !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 #onboarding .widget-preview-card:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--border-hover);
+  background: white !important;
+  border-color: #3b82f6 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 /* Onboarding background and text colors */
@@ -443,19 +452,37 @@ html[data-theme="dark"] {
 
 /* Ensure proper contrast for onboarding elements */
 #onboarding label {
-  background: var(--bg-tertiary) !important;
-  border-color: var(--border-color) !important;
+  background: white !important;
+  border-color: rgba(255, 255, 255, 0.6) !important;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 #onboarding label:hover {
-  background: var(--bg-hover) !important;
-  border-color: var(--border-hover) !important;
+  background: white !important;
+  border-color: #3b82f6 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 #onboarding label span {
-  color: var(--text-primary) !important;
+  color: #1f2937 !important;
   transition: color 0.3s ease;
+}
+
+/* Ensure all question containers have consistent white background */
+#question-container .space-y-4 > div {
+  background: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+#question-container .space-y-4 > div:hover {
+  border-color: #3b82f6 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 #onboarding input[type="radio"] {
@@ -470,48 +497,13 @@ html[data-theme="dark"] {
   border-color: #3b82f6;
 }
 
-/* Awakening Blue Theme Enhancements */
+/* Welcome screen and onboarding styles */
 #welcome-screen {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 25%, #c7d2fe 50%, #a5b4fc 75%, #818cf8 100%) !important;
-  animation: gentleAwakening 6s ease-in-out infinite;
-}
-
-@keyframes gentleAwakening {
-  0%, 100% { opacity: 0.98; }
-  50% { opacity: 1; }
-}
-
-#welcome-screen .bg-white\/95 {
-  background: rgba(255, 255, 255, 0.98) !important;
-  backdrop-filter: blur(25px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+  background: linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%);
 }
 
 #onboarding {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 25%, #c7d2fe 50%, #a5b4fc 75%, #818cf8 100%) !important;
-  animation: gentleAwakening 6s ease-in-out infinite;
-  backdrop-filter: blur(20px);
-  position: relative;
-}
-
-#onboarding::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 30% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 70% 80%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Enhanced button hover effects */
-#welcome-screen button:hover {
-  transform: translateY(-1px) scale(1.01);
-  box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.08), 0 8px 8px -5px rgba(0, 0, 0, 0.03);
+  background: linear-gradient(135deg, #f8fafc 0%, #dbeafe 50%, #e0e7ff 100%);
 }
 
 /* FocusFlow Custom Styles */
@@ -1550,20 +1542,20 @@ h1, h2, h3, h4, h5, h6 {
     line-height: 1.25;
 }
 
-/* Comprehensive Dark Theme Styles */
+/* Enhanced Dark Theme Styles */
 body.dark-theme {
-    background: #0f0f0f;
+    background: #0a0a0a;
     color: #ffffff;
 }
 
 /* Dark theme for main app */
 .dark-theme #main-app {
-    background: #0f0f0f;
+    background: #0a0a0a;
     color: #ffffff;
 }
 
 .dark-theme #main-app main {
-    background: #0f0f0f;
+    background: #0a0a0a;
     color: #ffffff;
 }
 
@@ -1583,10 +1575,13 @@ body.dark-theme a {
 body.dark-theme .bg-white,
 body.dark-theme #timer-container,
 body.dark-theme #quote-card,
-body.dark-theme #progress-card {
+body.dark-theme #progress-card,
+body.dark-theme #schedule-card,
+body.dark-theme #analytics-card {
     background: #1a1a1a;
     color: #ffffff;
     border-color: #333333;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
 }
 
 body.dark-theme #timer-display {
@@ -1606,6 +1601,7 @@ body.dark-theme header {
     background: #1a1a1a;
     border-bottom-color: #333333;
     color: #ffffff;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 
 body.dark-theme header h1 {
@@ -1618,6 +1614,32 @@ body.dark-theme header button {
 
 body.dark-theme header button:hover {
     background: #333333;
+}
+
+
+
+/* Wisdom Section Styles */
+#quote-card {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+#quote-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.dark-theme #quote-card {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme #quote-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
 }
 
 /* Dark theme for all text elements */
@@ -1640,6 +1662,20 @@ body.dark-theme em,
 body.dark-theme b, 
 body.dark-theme i {
     color: #ffffff;
+}
+
+/* Enhanced text readability for specific elements */
+.dark-theme .text-gray-600,
+.dark-theme .text-gray-700 {
+    color: #d1d5db !important;
+}
+
+.dark-theme .text-gray-500 {
+    color: #9ca3af !important;
+}
+
+.dark-theme .text-gray-400 {
+    color: #9ca3af !important;
 }
 
 /* Dark theme for specific elements */
@@ -2222,6 +2258,164 @@ body.dark-theme i {
     transform: translateY(-1px);
 }
 
+/* Enhanced Analytics Styles */
+.analytics-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px var(--shadow-dark);
+}
+
+.analytics-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--shadow-dark);
+}
+
+.analytics-metric {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.analytics-metric:hover {
+    background: var(--bg-hover);
+    transform: translateX(4px);
+}
+
+.analytics-metric-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.analytics-metric-value {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 1.1em;
+}
+
+.progress-indicator {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-hover));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.completed {
+    background: linear-gradient(90deg, #10B981, #059669);
+}
+
+.progress-fill.partial {
+    background: linear-gradient(90deg, #F59E0B, #D97706);
+}
+
+.progress-fill.low {
+    background: linear-gradient(90deg, #EF4444, #DC2626);
+}
+
+/* Enhanced Calendar Styles */
+.calendar-day {
+    position: relative;
+    overflow: hidden;
+}
+
+.calendar-day::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.calendar-day:hover::before {
+    transform: translateX(100%);
+}
+
+.calendar-day.completed {
+    background: linear-gradient(135deg, #10B981, #059669);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.calendar-day.partial {
+    background: linear-gradient(135deg, #F59E0B, #D97706);
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.calendar-day.missed {
+    background: linear-gradient(135deg, #EF4444, #DC2626);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Enhanced Chart Styles */
+.chart-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(255,255,255,0.2), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.chart-bar:hover::after {
+    opacity: 1;
+}
+
+/* Export Modal Styles */
+.export-modal {
+    backdrop-filter: blur(8px);
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.export-option {
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.export-option:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
 /* Dark Theme Support for Analytics */
 .dark-theme #analytics-card {
     background: #1a1a1a;
@@ -2511,5 +2705,530 @@ body.dark-theme i {
     
     .calendar-day {
         font-size: 0.625rem;
+    }
+}
+
+/* Enhanced widget preview visibility for onboarding */
+.widget-preview-card {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.widget-preview-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.widget-preview-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.widget-preview-card:hover::before {
+    transform: translateX(100%);
+}
+
+/* Enhanced text visibility for widget previews */
+.widget-preview-card .text-2xl {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.widget-preview-card .text-sm {
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+.widget-preview-card .text-xs {
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced dark mode support for onboarding widget previews */
+.dark-theme .widget-preview-card {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .widget-preview-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.dark-theme .widget-preview-card .text-2xl {
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .widget-preview-card .text-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme .widget-preview-card .text-xs {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced contrast for onboarding radio buttons in dark mode */
+.dark-theme #onboarding label {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.dark-theme #onboarding label:hover {
+    background: rgba(255, 255, 255, 1) !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dark-theme #onboarding label span {
+    color: #1f2937 !important;
+    font-weight: 500;
+}
+
+/* Ensure all three widget preview modes are visible */
+.widget-zen {
+    background: var(--bg-secondary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.widget-achievement {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border-color: #10b981 !important;
+}
+
+.widget-hybrid {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important;
+    border-color: #8b5cf6 !important;
+}
+
+/* Enhanced onboarding question visibility */
+#onboarding h2 {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme #onboarding h2 {
+    color: #f1f5f9 !important;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+#onboarding p {
+    color: var(--text-secondary) !important;
+    font-weight: 500 !important;
+}
+
+.dark-theme #onboarding p {
+    color: #cbd5e1 !important;
+}
+
+/* Mode preview cards styles */
+.mode-preview-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.mode-preview-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.mode-preview-card input[type="radio"] {
+    accent-color: #10b981;
+}
+
+.mode-preview-card input[type="radio"]:checked + div {
+    color: #10b981;
+}
+
+/* Mode preview card specific styles */
+.mode-preview-card.mode-zen:hover {
+    border-color: #10b981 !important;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2) !important;
+}
+
+.mode-preview-card.mode-achievement:hover {
+    border-color: #10b981 !important;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2) !important;
+}
+
+.mode-preview-card.mode-hybrid:hover {
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.2) !important;
+}
+
+/* Dark mode styles for mode preview cards */
+.dark-theme .mode-preview-card {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #f1f5f9 !important;
+}
+
+.dark-theme .mode-preview-card:hover {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+.dark-theme .mode-preview-card h3 {
+    color: #f1f5f9 !important;
+}
+
+.dark-theme .mode-preview-card p {
+    color: #cbd5e1 !important;
+}
+
+.dark-theme .mode-preview-card .text-gray-500 {
+    color: #94a3b8 !important;
+}
+
+.dark-theme .mode-preview-card .text-gray-600 {
+    color: #cbd5e1 !important;
+}
+
+.dark-theme .mode-preview-card .text-gray-800 {
+    color: #f1f5f9 !important;
+}
+
+.dark-theme .mode-preview-card.mode-zen:hover {
+    border-color: #10b981 !important;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3) !important;
+}
+
+.dark-theme .mode-preview-card.mode-achievement:hover {
+    border-color: #10b981 !important;
+    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3) !important;
+}
+
+.dark-theme .mode-preview-card.mode-hybrid:hover {
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Color legend styles for widget preview */
+.dark-theme .bg-white\/90 {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark-theme .text-black {
+    color: #000000 !important;
+}
+
+.dark-theme .text-gray-700 {
+    color: #374151 !important;
+}
+
+/* Distraction Management Styles */
+#mindful-pause-modal {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+#mindful-pause-modal .bg-white {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark-theme #mindful-pause-modal .bg-white {
+    background: rgba(45, 45, 45, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#mindful-pause-modal h3 {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+#mindful-pause-modal p {
+    color: var(--text-secondary);
+}
+
+#mindful-pause-modal .bg-blue-50 {
+    background: rgba(59, 130, 246, 0.1) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+#mindful-pause-modal .bg-green-50 {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.dark-theme #mindful-pause-modal .bg-blue-50 {
+    background: rgba(59, 130, 246, 0.2) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.dark-theme #mindful-pause-modal .bg-green-50 {
+    background: rgba(16, 185, 129, 0.2) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+#mindful-pause-modal .text-blue-800 {
+    color: var(--text-primary) !important;
+}
+
+#mindful-pause-modal .text-green-800 {
+    color: var(--text-primary) !important;
+}
+
+#mindful-pause-modal .text-blue-600 {
+    color: var(--text-secondary) !important;
+}
+
+#mindful-pause-modal .text-green-600 {
+    color: var(--text-secondary) !important;
+}
+
+/* Break Suggestions Modal */
+#break-suggestions-modal {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+#break-suggestions-modal .bg-white {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark-theme #break-suggestions-modal .bg-white {
+    background: rgba(45, 45, 45, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#break-suggestions-modal .bg-gray-50 {
+    background: rgba(249, 250, 251, 0.8) !important;
+    border: 1px solid rgba(229, 231, 235, 0.5);
+    transition: all 0.2s ease;
+}
+
+#break-suggestions-modal .bg-gray-50:hover {
+    background: rgba(243, 244, 246, 0.9) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme #break-suggestions-modal .bg-gray-50 {
+    background: rgba(55, 65, 81, 0.8) !important;
+    border: 1px solid rgba(75, 85, 99, 0.5);
+}
+
+.dark-theme #break-suggestions-modal .bg-gray-50:hover {
+    background: rgba(75, 85, 99, 0.9) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Activity Timer Modal */
+#activity-timer-modal {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+#activity-timer-modal .bg-white {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark-theme #activity-timer-modal .bg-white {
+    background: rgba(45, 45, 45, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#activity-timer-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--accent-primary);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-theme #activity-timer-display {
+    color: #10b981;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Focus Reminder Notification */
+.focus-reminder {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Encouragement Message */
+.encouragement-message {
+    animation: bounceIn 0.6s ease-out;
+}
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Distraction Settings */
+#distraction-settings {
+    border-top: 1px solid var(--border-color);
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.dark-theme #distraction-settings {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+#distraction-settings h3 {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+#distraction-settings label {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+#distraction-settings input[type="checkbox"] {
+    accent-color: var(--accent-primary);
+}
+
+#distraction-settings select {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+#distraction-settings select:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Zen Mode Distraction Management */
+.zen-mode #mindful-pause-modal .bg-white {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.zen-mode #mindful-pause-modal h3 {
+    font-weight: 300;
+    letter-spacing: 0.05em;
+}
+
+.zen-mode #mindful-pause-modal p {
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+.zen-mode #mindful-pause-modal .bg-blue-50 {
+    background: rgba(239, 246, 255, 0.8) !important;
+    border: 1px solid rgba(219, 234, 254, 0.6);
+}
+
+.zen-mode #mindful-pause-modal .bg-green-50 {
+    background: rgba(240, 253, 244, 0.8) !important;
+    border: 1px solid rgba(220, 252, 231, 0.6);
+}
+
+/* Achievement Mode Distraction Management */
+.achievement-mode #mindful-pause-modal .bg-white {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95)) !important;
+    border: 2px solid var(--accent-primary);
+}
+
+.achievement-mode #mindful-pause-modal h3 {
+    color: var(--accent-primary);
+    font-weight: 700;
+}
+
+.achievement-mode #mindful-pause-modal .bg-blue-50 {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.15)) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.achievement-mode #mindful-pause-modal .bg-green-50 {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15)) !important;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Hybrid Mode Distraction Management */
+.hybrid-mode #mindful-pause-modal .bg-white {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(139, 92, 246, 0.05)) !important;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.hybrid-mode #mindful-pause-modal h3 {
+    background: linear-gradient(135deg, var(--text-primary), #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+}
+
+/* Responsive Design for Distraction Management */
+@media (max-width: 768px) {
+    #mindful-pause-modal,
+    #break-suggestions-modal,
+    #activity-timer-modal {
+        padding: 1rem;
+    }
+    
+    #mindful-pause-modal .bg-white,
+    #break-suggestions-modal .bg-white,
+    #activity-timer-modal .bg-white {
+        max-width: 90vw;
+        margin: 0 auto;
+    }
+    
+    #mindful-pause-modal h3 {
+        font-size: 1.25rem;
+    }
+    
+    #mindful-pause-modal p {
+        font-size: 0.875rem;
+    }
+    
+    #activity-timer-display {
+        font-size: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #mindful-pause-modal .flex.space-x-3 {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    #mindful-pause-modal .flex.space-x-3 button {
+        width: 100%;
+    }
+    
+    #break-suggestions-modal .space-y-3 > div {
+        padding: 0.75rem;
+    }
+    
+    #activity-timer-display {
+        font-size: 1.75rem;
     }
 }
