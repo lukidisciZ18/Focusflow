@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>FocusFlow Test Page</h1>
+    
+    <div class="test-section">
+        <h2>LocalStorage Test</h2>
+        <button onclick="testLocalStorage()">Test LocalStorage</button>
+        <div id="localStorage-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>DOM Elements Test</h2>
+        <button onclick="testDOMElements()">Test DOM Elements</button>
+        <div id="dom-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>JavaScript Test</h2>
+        <button onclick="testJavaScript()">Test JavaScript</button>
+        <div id="js-result"></div>
+    </div>
+
+    <script>
+        function testLocalStorage() {
+            const result = document.getElementById('localStorage-result');
+            try {
+                localStorage.setItem('test', 'value');
+                const retrieved = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                if (retrieved === 'value') {
+                    result.innerHTML = '<span class="success">✓ LocalStorage working</span>';
+                } else {
+                    result.innerHTML = '<span class="error">✗ LocalStorage not working</span>';
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ LocalStorage error: ${error.message}</span>`;
+            }
+        }
+        
+        function testDOMElements() {
+            const result = document.getElementById('dom-result');
+            try {
+                const testDiv = document.createElement('div');
+                testDiv.id = 'test-element';
+                testDiv.textContent = 'Test element';
+                document.body.appendChild(testDiv);
+                
+                const found = document.getElementById('test-element');
+                document.body.removeChild(testDiv);
+                
+                if (found) {
+                    result.innerHTML = '<span class="success">✓ DOM manipulation working</span>';
+                } else {
+                    result.innerHTML = '<span class="error">✗ DOM manipulation not working</span>';
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ DOM error: ${error.message}</span>`;
+            }
+        }
+        
+        function testJavaScript() {
+            const result = document.getElementById('js-result');
+            try {
+                // Test basic JavaScript functionality
+                const testArray = [1, 2, 3];
+                const sum = testArray.reduce((a, b) => a + b, 0);
+                
+                if (sum === 6) {
+                    result.innerHTML = '<span class="success">✓ JavaScript working</span>';
+                } else {
+                    result.innerHTML = '<span class="error">✗ JavaScript not working</span>';
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ JavaScript error: ${error.message}</span>`;
+            }
+        }
+        
+        // Auto-run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testLocalStorage();
+                testDOMElements();
+                testJavaScript();
+            }, 100);
+        });
+    </script>
+</body>
+</html> 
