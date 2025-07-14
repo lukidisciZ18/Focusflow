@@ -8,7 +8,6 @@ class DarkMode {
 
   init() {
     this.createStyles();
-    this.createToggle();
     this.applyTheme(this.theme);
     this.setupEventListeners();
   }
@@ -44,39 +43,6 @@ class DarkMode {
         color: var(--text-primary);
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      }
-
-      .dark-mode-toggle {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 50px;
-        padding: 8px 16px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: var(--shadow);
-        z-index: 1000;
-      }
-
-      .dark-mode-toggle:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-      }
-
-      .theme-icon {
-        width: 20px;
-        height: 20px;
-        transition: var(--transition);
-      }
-
-      .theme-text {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-primary);
       }
 
       /* Common element styles */
@@ -125,20 +91,6 @@ class DarkMode {
     document.head.appendChild(style);
   }
 
-  createToggle() {
-    const toggle = document.createElement('div');
-    toggle.className = 'dark-mode-toggle';
-    toggle.innerHTML = `
-      <div class="theme-icon">
-        ${this.theme === 'dark' ? this.getMoonIcon() : this.getSunIcon()}
-      </div>
-      <span class="theme-text">${this.theme === 'dark' ? 'Dark' : 'Light'}</span>
-    `;
-    toggle.addEventListener('click', () => this.toggle());
-    document.body.appendChild(toggle);
-    this.toggleElement = toggle;
-  }
-
   setupEventListeners() {
     // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
@@ -161,22 +113,11 @@ class DarkMode {
     this.theme = this.theme === 'dark' ? 'light' : 'dark';
     this.applyTheme(this.theme);
     this.storeTheme(this.theme);
-    this.updateToggle();
   }
 
   applyTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     this.theme = theme;
-  }
-
-  updateToggle() {
-    if (this.toggleElement) {
-      const icon = this.toggleElement.querySelector('.theme-icon');
-      const text = this.toggleElement.querySelector('.theme-text');
-      
-      icon.innerHTML = this.theme === 'dark' ? this.getMoonIcon() : this.getSunIcon();
-      text.textContent = this.theme === 'dark' ? 'Dark' : 'Light';
-    }
   }
 
   getSystemTheme() {
@@ -213,18 +154,11 @@ class DarkMode {
       this.theme = theme;
       this.applyTheme(theme);
       this.storeTheme(theme);
-      this.updateToggle();
     }
   }
 
   getCurrentTheme() {
     return this.theme;
-  }
-
-  removeToggle() {
-    if (this.toggleElement) {
-      this.toggleElement.remove();
-    }
   }
 }
 

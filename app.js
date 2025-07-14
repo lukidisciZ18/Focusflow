@@ -1,5 +1,313 @@
 // FocusFlow - Main Application Logic
 
+// Performance monitoring
+const performanceMetrics = {
+    startTime: performance.now(),
+    loadTimes: {},
+    interactions: {}
+};
+
+// Track performance
+function trackPerformance(label, startTime) {
+    const duration = performance.now() - startTime;
+    performanceMetrics.loadTimes[label] = duration;
+    console.log(`${label}: ${duration.toFixed(2)}ms`);
+}
+
+// Intersection Observer for lazy loading
+const lazyLoadObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('loaded');
+            lazyLoadObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1 });
+
+// Service Worker registration
+async function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            console.log('Service Worker registered:', registration);
+            
+            // Handle updates
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New version available
+                        showUpdateNotification();
+                    }
+                });
+            });
+            
+            return registration;
+        } catch (error) {
+            console.error('Service Worker registration failed:', error);
+        }
+    }
+}
+
+// Show update notification
+function showUpdateNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span>New version available</span>
+            <button onclick="location.reload()" class="bg-white text-blue-500 px-2 py-1 rounded text-sm">Update</button>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 10000);
+}
+
+// Offline detection
+let isOnline = navigator.onLine;
+window.addEventListener('online', () => {
+    isOnline = true;
+    hideOfflineIndicator();
+    syncOfflineData();
+});
+window.addEventListener('offline', () => {
+    isOnline = false;
+    showOfflineIndicator();
+});
+
+function showOfflineIndicator() {
+    let indicator = document.getElementById('offline-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'offline-indicator';
+        indicator.className = 'offline-indicator';
+        indicator.textContent = 'You are offline. Some features may be limited.';
+        document.body.appendChild(indicator);
+    }
+    indicator.classList.add('show');
+}
+
+function hideOfflineIndicator() {
+    const indicator = document.getElementById('offline-indicator');
+    if (indicator) {
+        indicator.classList.remove('show');
+    }
+}
+
+// Sync offline data when back online
+async function syncOfflineData() {
+    const pendingSessions = localStorage.getItem('focusflow_pending_sessions');
+    if (pendingSessions) {
+        try {
+            // Send pending data to server
+            console.log('Syncing offline data...');
+            localStorage.removeItem('focusflow_pending_sessions');
+        } catch (error) {
+            console.error('Failed to sync offline data:', error);
+        }
+    }
+}
+
+// Responsive design utilities
+const responsiveUtils = {
+    isMobile: () => window.innerWidth < 768,
+    isTablet: () => window.innerWidth >= 768 && window.innerWidth < 1024,
+    isDesktop: () => window.innerWidth >= 1024,
+    
+    getViewportSize() {
+        return {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            isMobile: this.isMobile(),
+            isTablet: this.isTablet(),
+            isDesktop: this.isDesktop()
+        };
+    },
+    
+    updateResponsiveClasses() {
+        const viewport = this.getViewportSize();
+        document.body.setAttribute('data-viewport', viewport.isMobile ? 'mobile' : viewport.isTablet ? 'tablet' : 'desktop');
+    }
+};
+
+// Touch and gesture handling
+const touchHandler = {
+    startX: 0,
+    startY: 0,
+    startTime: 0,
+    
+    init() {
+        document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
+        document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
+        document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: true });
+    },
+    
+    handleTouchStart(e) {
+        this.startX = e.touches[0].clientX;
+        this.startY = e.touches[0].clientY;
+        this.startTime = Date.now();
+    },
+    
+    handleTouchEnd(e) {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const deltaX = endX - this.startX;
+        const deltaY = endY - this.startY;
+        const duration = Date.now() - this.startTime;
+        
+        // Detect swipe gestures
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaY) < 50 && duration < 300) {
+            if (deltaX > 0) {
+                this.handleSwipeRight();
+            } else {
+                this.handleSwipeLeft();
+            }
+        }
+    },
+    
+    handleTouchMove(e) {
+        // Prevent default for vertical scrolling
+        if (Math.abs(e.touches[0].clientY - this.startY) > Math.abs(e.touches[0].clientX - this.startX)) {
+            return;
+        }
+        e.preventDefault();
+    },
+    
+    handleSwipeRight() {
+        // Navigate back or previous
+        console.log('Swipe right detected');
+    },
+    
+    handleSwipeLeft() {
+        // Navigate forward or next
+        console.log('Swipe left detected');
+    }
+};
+
+// Accessibility enhancements
+const accessibilityUtils = {
+    init() {
+        this.setupKeyboardNavigation();
+        this.setupScreenReaderSupport();
+        this.setupFocusManagement();
+    },
+    
+    setupKeyboardNavigation() {
+        document.addEventListener('keydown', (e) => {
+            // Escape key to close modals
+            if (e.key === 'Escape') {
+                this.closeAllModals();
+            }
+            
+            // Enter key for buttons
+            if (e.key === 'Enter' && e.target.tagName === 'BUTTON') {
+                e.target.click();
+            }
+        });
+    },
+    
+    setupScreenReaderSupport() {
+        // Add ARIA labels and roles
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            if (!button.getAttribute('aria-label')) {
+                button.setAttribute('aria-label', button.textContent.trim());
+            }
+        });
+    },
+    
+    setupFocusManagement() {
+        // Trap focus in modals
+        const modals = document.querySelectorAll('[role="dialog"]');
+        modals.forEach(modal => {
+            const focusableElements = modal.querySelectorAll('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+            
+            if (firstElement && lastElement) {
+                modal.addEventListener('keydown', (e) => {
+                    if (e.key === 'Tab') {
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstElement) {
+                                e.preventDefault();
+                                lastElement.focus();
+                            }
+                        } else {
+                            if (document.activeElement === lastElement) {
+                                e.preventDefault();
+                                firstElement.focus();
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    },
+    
+    closeAllModals() {
+        const modals = document.querySelectorAll('.modal, [role="dialog"]');
+        modals.forEach(modal => {
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+        });
+    }
+};
+
+// Performance optimizations
+const performanceUtils = {
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+    
+    throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    },
+    
+    lazyLoadImages() {
+        const images = document.querySelectorAll('img[data-src]');
+        images.forEach(img => {
+            lazyLoadObserver.observe(img);
+        });
+    },
+    
+    preloadCriticalResources() {
+        const criticalResources = [
+            '/styles.css',
+            '/app.js',
+            '/darkMode.js'
+        ];
+        
+        criticalResources.forEach(resource => {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.href = resource;
+            link.as = resource.endsWith('.css') ? 'style' : 'script';
+            document.head.appendChild(link);
+        });
+    }
+};
+
 // Authentication Functions
 function showAuthModal() {
     document.getElementById('auth-modal').classList.remove('hidden');
@@ -218,161 +526,158 @@ class FocusFlowAuth {
             userAgent: navigator.userAgent,
             platform: navigator.platform,
             language: navigator.language,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            screenSize: `${screen.width}x${screen.height}`,
-            deviceId: this.getDeviceId()
+            cookieEnabled: navigator.cookieEnabled,
+            onLine: navigator.onLine,
+            screenWidth: screen.width,
+            screenHeight: screen.height,
+            viewportWidth: window.innerWidth,
+            viewportHeight: window.innerHeight
         };
     }
 
     getDeviceId() {
         let deviceId = localStorage.getItem('focusflow_device_id');
         if (!deviceId) {
-            deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('focusflow_device_id', deviceId);
         }
         return deviceId;
     }
 
     saveUserDataLocally(user) {
-        localStorage.setItem('focusflow_user_id', user.id);
-        localStorage.setItem('focusflow_user_email', user.email);
-        localStorage.setItem('focusflow_user_data', JSON.stringify(user));
-        localStorage.setItem('focusflow_auth_token', 'demo_token_' + user.id);
+        const users = JSON.parse(localStorage.getItem('focusflow_users') || '[]');
+        const existingIndex = users.findIndex(u => u.id === user.id);
+        
+        if (existingIndex >= 0) {
+            users[existingIndex] = user;
+        } else {
+            users.push(user);
+        }
+        
+        localStorage.setItem('focusflow_users', JSON.stringify(users));
+        localStorage.setItem('focusflow_current_user', JSON.stringify(user));
     }
 
     loadUserDataLocally() {
-        const userData = localStorage.getItem('focusflow_user_data');
-        if (userData) {
-            this.currentUser = JSON.parse(userData);
+        const currentUser = localStorage.getItem('focusflow_current_user');
+        if (currentUser) {
+            this.currentUser = JSON.parse(currentUser);
             this.isAuthenticated = true;
-            return this.currentUser;
         }
-        return null;
     }
 
     signOut() {
-        this.isAuthenticated = false;
         this.currentUser = null;
-        localStorage.removeItem('focusflow_user_id');
-        localStorage.removeItem('focusflow_user_email');
-        localStorage.removeItem('focusflow_user_data');
+        this.isAuthenticated = false;
+        localStorage.removeItem('focusflow_current_user');
         localStorage.removeItem('focusflow_auth_token');
         console.log('User signed out');
     }
 
     isUserAuthenticated() {
-        return this.isAuthenticated && this.getAuthToken();
+        return this.isAuthenticated && this.currentUser !== null;
     }
 
     async updateLockScreenWidgetPreference(enabled) {
-        if (!this.isAuthenticated) return false;
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
         
         try {
-            const preferences = {
-                lockScreenWidget: enabled
-            };
+            this.currentUser.preferences.lockScreenWidget = enabled;
+            this.saveUserDataLocally(this.currentUser);
             
-            const result = await this.updateProfile(null, preferences);
-            return result.success;
+            console.log('Lock screen widget preference updated:', enabled);
+            return { success: true, enabled: enabled };
         } catch (error) {
-            console.error('Failed to update lock screen widget preference:', error);
-            return false;
+            console.error('Update lock screen widget preference error:', error);
+            return { success: false, error: error.message };
         }
     }
 
     getLockScreenWidgetPreference() {
-        if (!this.isAuthenticated) return false;
         return this.currentUser?.preferences?.lockScreenWidget || false;
     }
 
-    // Helper methods
     generateUserId() {
         return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
 
     getUserByEmail(email) {
-        const userData = localStorage.getItem('focusflow_user_data');
-        if (userData) {
-            const user = JSON.parse(userData);
-            if (user.email === email) {
-                return user;
-            }
-        }
-        return null;
+        const users = JSON.parse(localStorage.getItem('focusflow_users') || '[]');
+        return users.find(user => user.email === email);
     }
 }
 
 // Initialize authentication
 const focusFlowAuth = new FocusFlowAuth();
 
-
-
-// Test DOM elements exist
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded');
-    
-    // Test if key elements exist
-    const loadingScreen = document.getElementById('loading-screen');
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const onboarding = document.getElementById('onboarding');
-    const mainApp = document.getElementById('main-app');
-    
-    console.log('Elements found:', {
-        loadingScreen: !!loadingScreen,
-        welcomeScreen: !!welcomeScreen,
-        onboarding: !!onboarding,
-        mainApp: !!mainApp
-    });
-    
-    // Show loading screen immediately
-    if (loadingScreen) {
-        loadingScreen.classList.remove('hidden');
-        console.log('Loading screen should be visible');
-    }
-    
-    // Reset onboarding state to ensure proper flow
-    localStorage.removeItem('focusflow_onboarding_completed');
-    localStorage.removeItem('focusflow_user_preferences');
-    console.log('FocusFlow script loaded, onboarding reset.');
-    
-    new FocusFlow();
-});
-
+// Main FocusFlow Application Class
 class FocusFlow {
     constructor() {
-        console.log('FocusFlow constructor called');
-        this.currentStep = 0;
-        this.userPreferences = {};
-        this.timer = null;
-        this.timerInterval = null;
-        this.currentTime = 0;
-        this.isRunning = false;
-        this.currentMode = 'zen';
-        this.quotes = this.initializeQuotes();
-        this.progress = {
-            todayMinutes: 0,
-            totalSessions: 0,
-            streak: 0,
-            lastSessionDate: null,
-            totalFocusTime: 0,
-            completedSessions: []
-        };
-        this.schedule = {
-            wakeUpTime: '06:00',
-            bedtime: '23:00',
-            focusWindowStart: '09:00',
-            focusWindowEnd: '17:00',
-            notifications: {
-                sessionReminders: true,
-                breakReminders: true,
-                dailyMotivation: true,
-                wakeUpReminders: true,
-                windDownReminders: true,
-                focusWindowReminders: true
-            }
-        };
-        this.notificationPermission = false;
+        const startTime = performance.now();
         
+        // Initialize performance tracking
+        this.performanceMetrics = performanceMetrics;
+        this.trackPerformance = trackPerformance;
+        
+        // Initialize utilities
+        this.responsiveUtils = responsiveUtils;
+        this.touchHandler = touchHandler;
+        this.accessibilityUtils = accessibilityUtils;
+        this.performanceUtils = performanceUtils;
+        
+        // Core properties
+        this.auth = new FocusFlowAuth();
+        this.currentMode = 'zen';
+        this.timer = null;
+        this.timerDuration = 25 * 60; // 25 minutes in seconds
+        this.timerRunning = false;
+        this.timerPaused = false;
+        this.timerStartTime = null;
+        this.timerPauseTime = null;
+        this.timerPauseDuration = 0;
+        this.backgroundTimer = null;
+        this.currentStep = 1;
+        this.totalSteps = 6;
+        this.onboardingComplete = false;
+        this.userPreferences = {};
+        this.quotes = [];
+        this.currentQuoteIndex = 0;
+        this.schedule = [];
+        this.notificationPermission = false;
+        this.analyticsData = {};
+        this.distractionSettings = {
+            enabled: false,
+            inactivityThreshold: 30000, // 30 seconds
+            breakReminders: true,
+            activityTracking: false
+        };
+        this.inactivityTimer = null;
+        this.lastActivityTime = Date.now();
+        
+        // Initialize responsive design
+        this.responsiveUtils.updateResponsiveClasses();
+        window.addEventListener('resize', this.performanceUtils.debounce(() => {
+            this.responsiveUtils.updateResponsiveClasses();
+        }, 250));
+        
+        // Initialize touch handling
+        this.touchHandler.init();
+        
+        // Initialize accessibility
+        this.accessibilityUtils.init();
+        
+        // Preload critical resources
+        this.performanceUtils.preloadCriticalResources();
+        
+        // Register service worker
+        registerServiceWorker();
+        
+        // Track initialization performance
+        this.trackPerformance('App Initialization', startTime);
+        
+        console.log('FocusFlow initialized with performance optimizations');
+        
+        // Initialize the app
         this.initializeApp();
     }
 
@@ -389,13 +694,13 @@ class FocusFlow {
         // Load progress asynchronously
         this.progress = await this.loadProgress();
 
-        // Check if user is authenticated
-        const isAuthenticated = focusFlowAuth.isUserAuthenticated();
-        console.log('isAuthenticated:', isAuthenticated);
+        // Check if user is authenticated or in guest mode
+        const isAuthenticated = this.auth.isUserAuthenticated();
+        const isGuestMode = localStorage.getItem('focusflow_guest') === 'true';
+        const hasCompletedOnboarding = localStorage.getItem('focusflow_onboarding_completed');
         
-        if (isAuthenticated) {
-            // User is logged in, check if they've completed onboarding
-            const hasCompletedOnboarding = localStorage.getItem('focusflow_onboarding_completed');
+        if (isAuthenticated || isGuestMode) {
+            // User is logged in or in guest mode, check if they've completed onboarding
             if (hasCompletedOnboarding) {
                 this.showMainApp();
             } else {
@@ -414,51 +719,19 @@ class FocusFlow {
     }
 
     initializeDarkMode() {
-        // Check for saved dark mode preference
-        const savedDarkMode = localStorage.getItem('focusflow_dark_mode');
-        
-        // Check for system preference if no saved preference
-        if (savedDarkMode === null) {
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            if (prefersDark) {
+        // Initialize dark mode if the darkMode object exists
+        if (window.darkMode) {
+            console.log('Dark mode initialized');
+        } else {
+            console.log('Dark mode not available, using fallback');
+            // Fallback: check localStorage for theme preference
+            const savedTheme = localStorage.getItem('focusflow_dark_mode');
+            if (savedTheme === 'true') {
                 document.documentElement.setAttribute('data-theme', 'dark');
-                localStorage.setItem('focusflow_dark_mode', 'true');
             } else {
                 document.documentElement.setAttribute('data-theme', 'light');
-                localStorage.setItem('focusflow_dark_mode', 'false');
-            }
-        } else if (savedDarkMode === 'true') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        } else {
-            document.documentElement.setAttribute('data-theme', 'light');
-        }
-        
-        // Debug: Log current theme
-        console.log('Current theme:', document.documentElement.getAttribute('data-theme'));
-        console.log('Dark mode preference:', savedDarkMode);
-        
-        // Set initial dark mode icon
-        const darkModeToggleBtn = document.getElementById('dark-mode-toggle');
-        if (darkModeToggleBtn) {
-            const icon = darkModeToggleBtn.querySelector('i');
-            if (icon) {
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
             }
         }
-        
-        // Listen for system theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-            if (localStorage.getItem('focusflow_dark_mode') === null) {
-                if (e.matches) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('focusflow_dark_mode', 'true');
-                } else {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    localStorage.setItem('focusflow_dark_mode', 'false');
-                }
-            }
-        });
     }
 
     bindEvents() {
@@ -471,6 +744,12 @@ class FocusFlow {
             console.log('Start onboarding clicked');
             this.startOnboarding();
         });
+
+        // Widget size switching functionality
+        this.bindWidgetSizeEvents();
+        
+        // Widget interaction events
+        this.bindWidgetInteractionEvents();
 
         // Sign in button
         const signInBtn = document.getElementById('sign-in-btn');
@@ -565,27 +844,29 @@ class FocusFlow {
         // Dark mode toggle button
         const darkModeToggleBtn = document.getElementById('dark-mode-toggle');
         if (darkModeToggleBtn) {
+            // Make the button draggable
+            this.makeDraggable(darkModeToggleBtn);
+            
             darkModeToggleBtn.onclick = () => {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                const isDark = currentTheme === 'dark';
-                
-                if (isDark) {
-                    document.documentElement.setAttribute('data-theme', 'light');
-                    localStorage.setItem('focusflow_dark_mode', 'false');
-                    // Update icon to moon
-                    const icon = darkModeToggleBtn.querySelector('i');
-                    if (icon) {
-                        icon.setAttribute('data-lucide', 'moon');
-                    }
+                // Use the darkMode.js functionality
+                if (window.darkMode) {
+                    window.darkMode.toggle();
                 } else {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('focusflow_dark_mode', 'true');
-                    // Update icon to sun
-                    const icon = darkModeToggleBtn.querySelector('i');
-                    if (icon) {
-                        icon.setAttribute('data-lucide', 'sun');
+                    // Fallback to direct theme switching
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const isDark = currentTheme === 'dark';
+                    
+                    if (isDark) {
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        localStorage.setItem('focusflow_dark_mode', 'false');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('focusflow_dark_mode', 'true');
                     }
                 }
+                
+                // Update icon and UI after theme change
+                this.updateDarkModeIcon();
                 this.renderLockScreenWidgetPreview();
                 this.renderUserSummary();
                 this.updateUI();
@@ -627,7 +908,13 @@ class FocusFlow {
         if (guestBtn) guestBtn.onclick = () => {
             localStorage.setItem('focusflow_guest', 'true');
             hideAuthModal();
-            this.showWelcomeScreen();
+            // Check if onboarding is already completed
+            const hasCompletedOnboarding = localStorage.getItem('focusflow_onboarding_completed');
+            if (hasCompletedOnboarding) {
+                this.showMainApp();
+            } else {
+                this.showWelcomeScreen();
+            }
         };
 
         const emailForm = document.getElementById('email-auth-form');
@@ -1008,95 +1295,144 @@ class FocusFlow {
     }
 
     generateWidgetPreview(step = 5) {
-        console.log('Generating widget preview for step:', step);
+        console.log('Generating enhanced widget preview for step:', step);
         return `
             <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <!-- Widget Size Selection -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-semibold mb-3" style="color: var(--text-primary);">Choose Widget Size:</h4>
+                    <div class="flex space-x-3 mb-4">
+                        <button class="widget-size-btn widget-size-small px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200" data-size="small">
+                            Small
+                        </button>
+                        <button class="widget-size-btn widget-size-medium px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 active" data-size="medium">
+                            Medium
+                        </button>
+                        <button class="widget-size-btn widget-size-large px-4 py-2 rounded-lg text-base font-medium transition-all duration-200" data-size="large">
+                            Large
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Enhanced Widget Grid -->
+                <div class="widget-grid widget-grid-responsive gap-4 mb-6">
                     <!-- Zen Mode Widget -->
-                    <div class="widget-preview-card widget-zen p-4 rounded-lg border shadow-lg" style="background: var(--bg-secondary); border-color: var(--border-color);">
-                        <div class="text-center">
-                            <div class="text-2xl font-mono font-bold" style="color: var(--text-primary);">25:00</div>
-                            <div class="text-sm font-medium" style="color: var(--text-secondary);">Focus Session</div>
-                            <div class="text-xs mt-1 font-medium" style="color: var(--text-muted);">Zen Mode</div>
-                            <div class="mt-2 flex justify-center space-x-1">
-                                <div class="w-3 h-3 rounded-full bg-gray-400"></div>
-                                <div class="w-3 h-3 rounded-full bg-gray-500"></div>
-                                <div class="w-3 h-3 rounded-full bg-gray-600"></div>
+                    <div class="widget widget-zen widget-medium widget-interactive widget-enter" data-mode="zen">
+                        <div class="widget-content">
+                            <div class="widget-header">
+                                <div class="widget-title">Zen Focus</div>
+                                <div class="text-xs opacity-75">Minimal</div>
+                            </div>
+                            <div class="widget-body text-center">
+                                <div class="text-2xl font-mono font-bold">25:00</div>
+                                <div class="text-sm opacity-90">Focus Session</div>
+                                <div class="mt-2 flex justify-center space-x-1">
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-60"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-80"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Achievement Mode Widget -->
-                    <div class="widget-preview-card widget-achievement p-4 rounded-lg border shadow-lg" style="background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981;">
-                        <div class="text-center">
-                            <div class="text-2xl font-mono font-bold text-white">25:00</div>
-                            <div class="text-sm font-medium text-white opacity-90">Focus Session</div>
-                            <div class="text-xs font-medium text-white opacity-75 mt-1">Achievement Mode</div>
-                            <div class="mt-2 flex justify-center space-x-1">
-                                <div class="w-3 h-3 rounded-full bg-green-400"></div>
-                                <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                                <div class="w-3 h-3 rounded-full bg-green-600"></div>
+                    <div class="widget widget-achievement widget-medium widget-interactive widget-enter" data-mode="achievement">
+                        <div class="widget-content">
+                            <div class="widget-header">
+                                <div class="widget-title">Achievement</div>
+                                <div class="text-xs opacity-75">Vibrant</div>
+                            </div>
+                            <div class="widget-body text-center">
+                                <div class="text-2xl font-mono font-bold">25:00</div>
+                                <div class="text-sm opacity-90">Focus Session</div>
+                                <div class="mt-2 flex justify-center space-x-1">
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-60"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-80"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Hybrid Mode Widget -->
-                    <div class="widget-preview-card widget-hybrid p-4 rounded-lg border shadow-lg" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6;">
-                        <div class="text-center">
-                            <div class="text-2xl font-mono font-bold text-white">25:00</div>
-                            <div class="text-sm font-medium text-white opacity-90">Focus Session</div>
-                            <div class="text-xs font-medium text-white opacity-75 mt-1">Hybrid Mode</div>
-                            <div class="mt-2 flex justify-center space-x-1">
-                                <div class="w-3 h-3 rounded-full bg-purple-400"></div>
-                                <div class="w-3 h-3 rounded-full bg-purple-500"></div>
-                                <div class="w-3 h-3 rounded-full bg-purple-600"></div>
+                    <div class="widget widget-hybrid widget-medium widget-interactive widget-enter" data-mode="hybrid">
+                        <div class="widget-content">
+                            <div class="widget-header">
+                                <div class="widget-title">Hybrid</div>
+                                <div class="text-xs opacity-75">Balanced</div>
+                            </div>
+                            <div class="widget-body text-center">
+                                <div class="text-2xl font-mono font-bold">25:00</div>
+                                <div class="text-sm opacity-90">Focus Session</div>
+                                <div class="mt-2 flex justify-center space-x-1">
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-60"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-80"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Mode Color Legend -->
-                <div class="bg-white/90 backdrop-blur-sm rounded-lg p-4 border border-gray-200">
-                    <h4 class="text-sm font-semibold text-black mb-3">Interface Mode Colors:</h4>
-                    <div class="grid grid-cols-3 gap-4 text-xs">
-                        <div class="text-center">
-                            <div class="flex justify-center space-x-1 mb-1">
-                                <div class="w-4 h-4 rounded-full bg-gray-400"></div>
-                                <div class="w-4 h-4 rounded-full bg-gray-500"></div>
-                                <div class="w-4 h-4 rounded-full bg-gray-600"></div>
-                            </div>
-                            <div class="font-medium text-black">Zen Mode</div>
-                            <div class="text-gray-700">Muted Grays</div>
+                <!-- Enhanced Mode Color Legend -->
+                <div class="widget widget-card widget-medium">
+                    <div class="widget-content">
+                        <div class="widget-header">
+                            <div class="widget-title">Interface Mode Colors</div>
                         </div>
-                        <div class="text-center">
-                            <div class="flex justify-center space-x-1 mb-1">
-                                <div class="w-4 h-4 rounded-full bg-green-400"></div>
-                                <div class="w-4 h-4 rounded-full bg-green-500"></div>
-                                <div class="w-4 h-4 rounded-full bg-green-600"></div>
+                        <div class="widget-body">
+                            <div class="grid grid-cols-3 gap-4 text-xs">
+                                <div class="text-center">
+                                    <div class="flex justify-center space-x-1 mb-2">
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--zen-primary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--zen-secondary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--zen-accent)"></div>
+                                    </div>
+                                    <div class="font-medium">Zen Mode</div>
+                                    <div class="opacity-75">Muted Grays</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="flex justify-center space-x-1 mb-2">
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--achievement-primary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--achievement-secondary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--achievement-accent)"></div>
+                                    </div>
+                                    <div class="font-medium">Achievement</div>
+                                    <div class="opacity-75">Vibrant Greens</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="flex justify-center space-x-1 mb-2">
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--hybrid-primary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--hybrid-secondary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--hybrid-accent)"></div>
+                                    </div>
+                                    <div class="font-medium">Hybrid Mode</div>
+                                    <div class="opacity-75">Balanced Purples</div>
+                                </div>
                             </div>
-                            <div class="font-medium text-black">Achievement</div>
-                            <div class="text-gray-700">Vibrant Greens</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="flex justify-center space-x-1 mb-1">
-                                <div class="w-4 h-4 rounded-full bg-purple-400"></div>
-                                <div class="w-4 h-4 rounded-full bg-purple-500"></div>
-                                <div class="w-4 h-4 rounded-full bg-purple-600"></div>
-                            </div>
-                            <div class="font-medium text-black">Hybrid Mode</div>
-                            <div class="text-gray-700">Balanced Purples</div>
                         </div>
                     </div>
                 </div>
                 
+                <!-- Widget Options -->
                 <div class="space-y-3">
-                    <label class="flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                        <input type="radio" name="question_${step}" value="yes" class="mr-3" checked>
-                        <span class="font-medium" style="color: var(--text-primary);">Yes, show timer on lock screen</span>
+                    <label class="widget widget-interactive widget-card widget-medium cursor-pointer transition-all duration-200 hover:shadow-lg">
+                        <input type="radio" name="question_${step}" value="yes" class="hidden" checked>
+                        <div class="widget-content">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full border-2 border-current mr-3 radio-indicator"></div>
+                                <span class="font-medium">Yes, show timer on lock screen</span>
+                            </div>
+                        </div>
                     </label>
-                    <label class="flex items-center p-4 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md" style="background: var(--bg-tertiary); border: 1px solid var(--border-color);">
-                        <input type="radio" name="question_${step}" value="no" class="mr-3">
-                        <span class="font-medium" style="color: var(--text-primary);">No, keep it simple</span>
+                    <label class="widget widget-interactive widget-card widget-medium cursor-pointer transition-all duration-200 hover:shadow-lg">
+                        <input type="radio" name="question_${step}" value="no" class="hidden">
+                        <div class="widget-content">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full border-2 border-current mr-3 radio-indicator"></div>
+                                <span class="font-medium">No, keep it simple</span>
+                            </div>
+                        </div>
                     </label>
                 </div>
             </div>
@@ -1203,7 +1539,6 @@ class FocusFlow {
     }
 
     showMainApp() {
-        console.log('Showing main app');
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
         
@@ -1273,31 +1608,54 @@ class FocusFlow {
         }
         
         let style = this.userPreferences.widgetStyle || 'zen_minimal';
-        let isDark = document.body.classList.contains('dark-theme');
-        let html = '';
+        let selectedMode = this.userPreferences.selectedWidgetMode || 'zen';
+        let widgetSize = this.userPreferences.widgetSize || 'medium';
         
-        if (style === 'zen_minimal') {
-            html = `<div class="p-4 rounded-lg border ${isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-700 border-gray-200'} text-center">
-                <div class="text-2xl font-mono ${isDark ? 'text-white' : 'text-gray-700'}">25:00</div>
-                <div class="text-sm ${isDark ? 'text-gray-200' : 'text-gray-600'}">Focus Session</div>
-                <div class="text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1">Zen Minimal</div>
-            </div>`;
-        } else if (style === 'achievement_vibrant') {
-            html = `<div class="p-4 rounded-lg border bg-gradient-to-br ${isDark ? 'from-indigo-900 to-purple-900 text-white border-gray-700' : 'from-green-400 to-purple-500 text-white border-gray-200'} text-center">
-                <div class="text-2xl font-mono">25:00</div>
-                <div class="text-sm opacity-90">Focus Session</div>
-                <div class="text-xs opacity-75 mt-1">Achievement Vibrant</div>
-            </div>`;
-        } else if (style === 'hybrid_adaptive') {
-            html = `<div class="p-4 rounded-lg border ${isDark ? 'bg-gradient-to-br from-gray-800 to-purple-900 text-purple-200 border-gray-700' : 'bg-gradient-to-br from-gray-200 to-purple-200 text-purple-700 border-gray-200'} text-center">
-                <div class="text-2xl font-mono">25:00</div>
-                <div class="text-sm">Focus Session</div>
-                <div class="text-xs mt-1">Hybrid Adaptive</div>
-            </div>`;
+        // Determine widget class based on style and mode
+        let widgetClass = 'widget widget-card';
+        if (style === 'zen_minimal' || selectedMode === 'zen') {
+            widgetClass += ' widget-zen';
+        } else if (style === 'achievement_vibrant' || selectedMode === 'achievement') {
+            widgetClass += ' widget-achievement';
+        } else if (style === 'hybrid_adaptive' || selectedMode === 'hybrid') {
+            widgetClass += ' widget-hybrid';
         }
+        
+        widgetClass += ` widget-${widgetSize}`;
+        
+        let html = `
+            <div class="${widgetClass} widget-interactive widget-enter">
+                <div class="widget-content">
+                    <div class="widget-header">
+                        <div class="widget-title">${selectedMode === 'zen' ? 'Zen Focus' : selectedMode === 'achievement' ? 'Achievement' : 'Hybrid'}</div>
+                        <div class="text-xs opacity-75">${selectedMode === 'zen' ? 'Minimal' : selectedMode === 'achievement' ? 'Vibrant' : 'Balanced'}</div>
+                    </div>
+                    <div class="widget-body text-center">
+                        <div class="text-2xl font-mono font-bold">25:00</div>
+                        <div class="text-sm opacity-90">Focus Session</div>
+                        <div class="mt-2 flex justify-center space-x-1">
+                            <div class="w-2 h-2 rounded-full bg-current opacity-60"></div>
+                            <div class="w-2 h-2 rounded-full bg-current opacity-80"></div>
+                            <div class="w-2 h-2 rounded-full bg-current"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
         
         preview.innerHTML = html;
         preview.classList.remove('hidden');
+        
+        // Add animation after a short delay
+        setTimeout(() => {
+            const widget = preview.querySelector('.widget');
+            if (widget) {
+                widget.classList.add('widget-glow');
+                setTimeout(() => {
+                    widget.classList.remove('widget-glow');
+                }, 2000);
+            }
+        }, 100);
     }
 
     renderUserSummary() {
@@ -3885,7 +4243,165 @@ This report was generated by FocusFlow - Your Personal Focus Coach.`;
             clearInterval(this.distractionInterval);
         }
     }
+
+    // Draggable functionality
+    makeDraggable(element) {
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        // Load saved position
+        const savedPosition = localStorage.getItem('focusflow_dark_mode_position');
+        if (savedPosition) {
+            const position = JSON.parse(savedPosition);
+            xOffset = position.x;
+            yOffset = position.y;
+            element.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        }
+
+        // Add draggable styles
+        element.style.position = 'fixed';
+        element.style.zIndex = '9999';
+        element.style.cursor = 'grab';
+        element.style.userSelect = 'none';
+        element.style.touchAction = 'none';
+
+        // Add visual feedback
+        element.addEventListener('mouseenter', () => {
+            if (!isDragging) {
+                element.style.cursor = 'grab';
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.05)`;
+            }
+        });
+
+        element.addEventListener('mouseleave', () => {
+            if (!isDragging) {
+                element.style.cursor = 'grab';
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1)`;
+            }
+        });
+
+        // Mouse events
+        element.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            element.style.cursor = 'grabbing';
+            element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.1)`;
+            
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                // Constrain to viewport
+                const rect = element.getBoundingClientRect();
+                const maxX = window.innerWidth - rect.width;
+                const maxY = window.innerHeight - rect.height;
+                
+                if (xOffset < 0) xOffset = 0;
+                if (xOffset > maxX) xOffset = maxX;
+                if (yOffset < 0) yOffset = 0;
+                if (yOffset > maxY) yOffset = maxY;
+                
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.1)`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                element.style.cursor = 'grab';
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1)`;
+                
+                // Save position
+                localStorage.setItem('focusflow_dark_mode_position', JSON.stringify({
+                    x: xOffset,
+                    y: yOffset
+                }));
+            }
+        });
+
+        // Touch events for mobile
+        element.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            element.style.cursor = 'grabbing';
+            element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.1)`;
+            
+            const touch = e.touches[0];
+            initialX = touch.clientX - xOffset;
+            initialY = touch.clientY - yOffset;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                currentX = touch.clientX - initialX;
+                currentY = touch.clientY - initialY;
+                
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                // Constrain to viewport
+                const rect = element.getBoundingClientRect();
+                const maxX = window.innerWidth - rect.width;
+                const maxY = window.innerHeight - rect.height;
+                
+                if (xOffset < 0) xOffset = 0;
+                if (xOffset > maxX) xOffset = maxX;
+                if (yOffset < 0) yOffset = 0;
+                if (yOffset > maxY) yOffset = maxY;
+                
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.1)`;
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                element.style.cursor = 'grab';
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1)`;
+                
+                // Save position
+                localStorage.setItem('focusflow_dark_mode_position', JSON.stringify({
+                    x: xOffset,
+                    y: yOffset
+                }));
+            }
+        });
+
+        // Double-click to reset position
+        element.addEventListener('dblclick', () => {
+            xOffset = 0;
+            yOffset = 0;
+            element.style.transform = 'translate(0px, 0px) scale(1)';
+            localStorage.removeItem('focusflow_dark_mode_position');
+        });
+
+        // Add visual indicator that it's draggable
+        element.title = 'Drag to move • Double-click to reset position';
+    }
 }
+
+// Initialize FocusFlow when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new FocusFlow();
+});
+
+
 
 // Service Worker for PWA functionality
 if ('serviceWorker' in navigator) {

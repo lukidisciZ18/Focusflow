@@ -2,16 +2,36 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>FocusFlow - Your Personal Focus Coach</title>
     <meta name="description" content="Build sustainable focus habits with personalized coaching, smart reminders, and culturally diverse wisdom.">
     
-    <!-- Google Fonts -->
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="FocusFlow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="FocusFlow">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    <meta name="msapplication-TileColor" content="#10B981">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#10B981">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#10B981">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1F2937">
+    
+    <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    
+    <!-- Google Fonts with Display Swap -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS CDN -->
@@ -25,23 +45,61 @@
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#10B981">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167x167.png">
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    
+    <!-- Splash Screen -->
+    <link rel="apple-touch-startup-image" href="/apple-splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/apple-splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/apple-splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/apple-splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/apple-splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "FocusFlow",
+        "description": "Your Personal Focus Coach",
+        "url": "https://focusflow.app",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300" style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);">
+    <!-- Skip to Main Content Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-green-500 text-white px-4 py-2 rounded-lg z-50">
+        Skip to main content
+    </a>
+    
     <!-- App Container -->
     <div id="app" class="min-h-screen">
         <!-- Loading Screen -->
-        <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div id="loading-screen" class="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center" role="status" aria-label="Loading FocusFlow">
             <div class="text-center">
-                <div class="text-4xl mb-4">🎯</div>
-                <div class="text-2xl font-bold text-gray-800 mb-2">FocusFlow</div>
-                <div class="text-gray-600">Your Personal Focus Coach</div>
+                <div class="text-4xl mb-4 animate-pulse">🎯</div>
+                <div class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">FocusFlow</div>
+                <div class="text-gray-600 dark:text-gray-400">Your Personal Focus Coach</div>
                 <div class="mt-4">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto" aria-hidden="true"></div>
                 </div>
+                <div class="sr-only">Loading FocusFlow application...</div>
             </div>
         </div>
 
@@ -102,73 +160,77 @@
         <!-- Main App -->
         <div id="main-app" class="hidden min-h-screen">
             <!-- Header -->
-            <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 backdrop-blur-sm bg-white/90 dark:bg-gray-800/90">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <div class="flex items-center">
-                            <div class="text-2xl mr-3">🎯</div>
+                            <div class="text-2xl mr-3" aria-hidden="true">🎯</div>
                             <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">FocusFlow</h1>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <button id="mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" title="Toggle Mode (Zen/Achievement/Hybrid)">
-                                <i data-lucide="zap" class="w-5 h-5"></i>
+                        <nav class="flex items-center space-x-2 sm:space-x-4" role="navigation" aria-label="Main navigation">
+                            <button id="mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500" title="Toggle Mode (Zen/Achievement/Hybrid)" aria-label="Toggle focus mode">
+                                <i data-lucide="zap" class="w-5 h-5" aria-hidden="true"></i>
                             </button>
-                            <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                                <i data-lucide="settings" class="w-5 h-5"></i>
+                            <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500" aria-label="Open settings">
+                                <i data-lucide="settings" class="w-5 h-5" aria-hidden="true"></i>
                             </button>
-                            <button id="dark-mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200" title="Toggle Dark Mode">
-                                <i data-lucide="moon" class="w-5 h-5"></i>
+                            <button id="dark-mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500" title="Toggle Dark Mode" aria-label="Toggle dark mode">
+                                <i data-lucide="moon" class="w-5 h-5" aria-hidden="true"></i>
                             </button>
-                            <button id="sign-out-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200">
-                                <i data-lucide="log-out" class="w-5 h-5"></i>
+                            <button id="sign-out-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500" aria-label="Sign out">
+                                <i data-lucide="log-out" class="w-5 h-5" aria-hidden="true"></i>
                             </button>
-                        </div>
+                        </nav>
                     </div>
                 </div>
             </header>
 
             <!-- Main Content -->
-            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8" role="main">
                 <!-- Dashboard -->
-                <div id="dashboard" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div id="dashboard" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                     <!-- Timer Section -->
                     <div class="lg:col-span-2">
-                        <div id="timer-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 h-full">
+                        <div id="timer-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 h-full">
                             <div class="text-center">
-                                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">Focus Timer</h2>
-                                <div class="relative inline-block">
-                                <svg id="progress-ring" class="w-48 h-48 transform -rotate-90" viewBox="0 0 120 120">
-                                    <circle cx="60" cy="60" r="54" stroke="#E5E7EB" stroke-width="4" fill="transparent"/>
-                                    <circle class="progress-ring-circle" cx="60" cy="60" r="54" stroke="#10B981" stroke-width="4" fill="transparent" stroke-linecap="round"/>
-                                </svg>
-                                <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-3xl font-mono text-gray-800 dark:text-gray-100">25:00</div>
-                            </div>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                                    <button id="quick-focus" class="px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                                        <div class="text-sm font-semibold">Quick Focus</div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-6">Focus Timer</h2>
+                                <div class="relative inline-block mb-6">
+                                    <svg id="progress-ring" class="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 transform -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                                        <circle cx="60" cy="60" r="54" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-200 dark:text-gray-700"/>
+                                        <circle class="progress-ring-circle" cx="60" cy="60" r="54" stroke="currentColor" stroke-width="4" fill="transparent" stroke-linecap="round" class="text-green-500"/>
+                                    </svg>
+                                    <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-mono text-gray-800 dark:text-gray-100 font-bold" role="timer" aria-live="polite">25:00</div>
+                                </div>
+                                
+                                <!-- Timer Presets - Responsive Grid -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
+                                    <button id="quick-focus" class="px-3 sm:px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2" aria-label="Set quick focus timer (15-30 minutes)">
+                                        <div class="text-xs sm:text-sm font-semibold">Quick Focus</div>
                                         <div class="text-xs opacity-90">15-30 min</div>
                                     </button>
-                                    <button id="deep-work" class="px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                                        <div class="text-sm font-semibold">Deep Work</div>
+                                    <button id="deep-work" class="px-3 sm:px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2" aria-label="Set deep work timer (60-180 minutes)">
+                                        <div class="text-xs sm:text-sm font-semibold">Deep Work</div>
                                         <div class="text-xs opacity-90">60-180 min</div>
                                     </button>
-                                    <button id="marathon" class="px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                                        <div class="text-sm font-semibold">Marathon</div>
+                                    <button id="marathon" class="px-3 sm:px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2" aria-label="Set marathon timer (3+ hours)">
+                                        <div class="text-xs sm:text-sm font-semibold">Marathon</div>
                                         <div class="text-xs opacity-90">3+ hours</div>
                                     </button>
-                                    <button id="custom-timer" class="px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                                        <div class="text-sm font-semibold">Custom</div>
+                                    <button id="custom-timer" class="px-3 sm:px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2" aria-label="Set custom timer">
+                                        <div class="text-xs sm:text-sm font-semibold">Custom</div>
                                         <div class="text-xs opacity-90">Set time</div>
                                     </button>
                                 </div>
-                                <div class="flex justify-center space-x-4">
-                                    <button id="start-timer" class="px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors duration-200">
+                                
+                                <!-- Timer Controls - Touch Friendly -->
+                                <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                                    <button id="start-timer" class="px-6 sm:px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 min-h-[44px]" aria-label="Start focus timer">
                                         Start
                                     </button>
-                                    <button id="pause-timer" class="px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors duration-200 hidden">
+                                    <button id="pause-timer" class="px-6 sm:px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 hidden min-h-[44px]" aria-label="Pause focus timer">
                                         Pause
                                     </button>
-                                    <button id="stop-timer" class="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors duration-200 hidden">
+                                    <button id="stop-timer" class="px-6 sm:px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 hidden min-h-[44px]" aria-label="Stop focus timer">
                                         Stop
                                     </button>
                                 </div>
@@ -177,26 +239,26 @@
                     </div>
 
                     <!-- Sidebar -->
-                    <div class="space-y-6 h-full">
+                    <div class="space-y-4 sm:space-y-6 h-full">
 
                         <!-- Wisdom Section -->
-                        <div id="quote-card" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Today's Wisdom</h3>
-                            <div id="quote-text" class="text-gray-700 dark:text-gray-300 italic mb-4">
+                        <div id="quote-card" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">Today's Wisdom</h3>
+                            <div id="quote-text" class="text-sm sm:text-base text-gray-700 dark:text-gray-300 italic mb-3 sm:mb-4 leading-relaxed">
                                 "You have power over your mind - not outside events. Realize this, and you will find strength."
                             </div>
-                            <div id="quote-author" class="text-sm text-gray-600 dark:text-gray-400">— Marcus Aurelius</div>
-                            <button id="new-quote" class="mt-4 text-sm text-green-600 hover:text-green-700 transition-colors duration-200">
+                            <div id="quote-author" class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">— Marcus Aurelius</div>
+                            <button id="new-quote" class="mt-3 sm:mt-4 text-xs sm:text-sm text-green-600 hover:text-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 rounded px-2 py-1" aria-label="Get new wisdom quote">
                                 New Quote
                             </button>
                         </div>
 
                         <!-- Lock Screen Widget -->
-                        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Lock Screen Widget</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Would you like to display your focus timer on your device's lock screen?</p>
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">Lock Screen Widget</h3>
+                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">Would you like to display your focus timer on your device's lock screen?</p>
                             <div class="flex items-center justify-between">
-                                <span class="text-sm text-gray-700 dark:text-gray-300">Show timer on lock screen</span>
+                                <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-300">Show timer on lock screen</span>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" id="lock-screen-widget" class="sr-only peer">
                                     <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
