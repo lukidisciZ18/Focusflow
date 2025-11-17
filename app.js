@@ -1,5 +1,313 @@
 // FocusFlow - Main Application Logic
 
+// Performance monitoring
+const performanceMetrics = {
+    startTime: performance.now(),
+    loadTimes: {},
+    interactions: {}
+};
+
+// Track performance
+function trackPerformance(label, startTime) {
+    const duration = performance.now() - startTime;
+    performanceMetrics.loadTimes[label] = duration;
+    console.log(`${label}: ${duration.toFixed(2)}ms`);
+}
+
+// Intersection Observer for lazy loading
+const lazyLoadObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('loaded');
+            lazyLoadObserver.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.1 });
+
+// Service Worker registration
+async function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            console.log('Service Worker registered:', registration);
+            
+            // Handle updates
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New version available
+                        showUpdateNotification();
+                    }
+                });
+            });
+            
+            return registration;
+        } catch (error) {
+            console.error('Service Worker registration failed:', error);
+        }
+    }
+}
+
+// Show update notification
+function showUpdateNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    notification.innerHTML = `
+        <div class="flex items-center space-x-2">
+            <span>New version available</span>
+            <button onclick="location.reload()" class="bg-white text-blue-500 px-2 py-1 rounded text-sm">Update</button>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 10000);
+}
+
+// Offline detection
+let isOnline = navigator.onLine;
+window.addEventListener('online', () => {
+    isOnline = true;
+    hideOfflineIndicator();
+    syncOfflineData();
+});
+window.addEventListener('offline', () => {
+    isOnline = false;
+    showOfflineIndicator();
+});
+
+function showOfflineIndicator() {
+    let indicator = document.getElementById('offline-indicator');
+    if (!indicator) {
+        indicator = document.createElement('div');
+        indicator.id = 'offline-indicator';
+        indicator.className = 'offline-indicator';
+        indicator.textContent = 'You are offline. Some features may be limited.';
+        document.body.appendChild(indicator);
+    }
+    indicator.classList.add('show');
+}
+
+function hideOfflineIndicator() {
+    const indicator = document.getElementById('offline-indicator');
+    if (indicator) {
+        indicator.classList.remove('show');
+    }
+}
+
+// Sync offline data when back online
+async function syncOfflineData() {
+    const pendingSessions = localStorage.getItem('focusflow_pending_sessions');
+    if (pendingSessions) {
+        try {
+            // Send pending data to server
+            console.log('Syncing offline data...');
+            localStorage.removeItem('focusflow_pending_sessions');
+        } catch (error) {
+            console.error('Failed to sync offline data:', error);
+        }
+    }
+}
+
+// Responsive design utilities
+const responsiveUtils = {
+    isMobile: () => window.innerWidth < 768,
+    isTablet: () => window.innerWidth >= 768 && window.innerWidth < 1024,
+    isDesktop: () => window.innerWidth >= 1024,
+    
+    getViewportSize() {
+        return {
+            width: window.innerWidth,
+            height: window.innerHeight,
+            isMobile: this.isMobile(),
+            isTablet: this.isTablet(),
+            isDesktop: this.isDesktop()
+        };
+    },
+    
+    updateResponsiveClasses() {
+        const viewport = this.getViewportSize();
+        document.body.setAttribute('data-viewport', viewport.isMobile ? 'mobile' : viewport.isTablet ? 'tablet' : 'desktop');
+    }
+};
+
+// Touch and gesture handling
+const touchHandler = {
+    startX: 0,
+    startY: 0,
+    startTime: 0,
+    
+    init() {
+        document.addEventListener('touchstart', this.handleTouchStart.bind(this), { passive: true });
+        document.addEventListener('touchend', this.handleTouchEnd.bind(this), { passive: true });
+        document.addEventListener('touchmove', this.handleTouchMove.bind(this), { passive: true });
+    },
+    
+    handleTouchStart(e) {
+        this.startX = e.touches[0].clientX;
+        this.startY = e.touches[0].clientY;
+        this.startTime = Date.now();
+    },
+    
+    handleTouchEnd(e) {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const deltaX = endX - this.startX;
+        const deltaY = endY - this.startY;
+        const duration = Date.now() - this.startTime;
+        
+        // Detect swipe gestures
+        if (Math.abs(deltaX) > 50 && Math.abs(deltaY) < 50 && duration < 300) {
+            if (deltaX > 0) {
+                this.handleSwipeRight();
+            } else {
+                this.handleSwipeLeft();
+            }
+        }
+    },
+    
+    handleTouchMove(e) {
+        // Prevent default for vertical scrolling
+        if (Math.abs(e.touches[0].clientY - this.startY) > Math.abs(e.touches[0].clientX - this.startX)) {
+            return;
+        }
+        e.preventDefault();
+    },
+    
+    handleSwipeRight() {
+        // Navigate back or previous
+        console.log('Swipe right detected');
+    },
+    
+    handleSwipeLeft() {
+        // Navigate forward or next
+        console.log('Swipe left detected');
+    }
+};
+
+// Accessibility enhancements
+const accessibilityUtils = {
+    init() {
+        this.setupKeyboardNavigation();
+        this.setupScreenReaderSupport();
+        this.setupFocusManagement();
+    },
+    
+    setupKeyboardNavigation() {
+        document.addEventListener('keydown', (e) => {
+            // Escape key to close modals
+            if (e.key === 'Escape') {
+                this.closeAllModals();
+            }
+            
+            // Enter key for buttons
+            if (e.key === 'Enter' && e.target.tagName === 'BUTTON') {
+                e.target.click();
+            }
+        });
+    },
+    
+    setupScreenReaderSupport() {
+        // Add ARIA labels and roles
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            if (!button.getAttribute('aria-label')) {
+                button.setAttribute('aria-label', button.textContent.trim());
+            }
+        });
+    },
+    
+    setupFocusManagement() {
+        // Trap focus in modals
+        const modals = document.querySelectorAll('[role="dialog"]');
+        modals.forEach(modal => {
+            const focusableElements = modal.querySelectorAll('button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+            
+            if (firstElement && lastElement) {
+                modal.addEventListener('keydown', (e) => {
+                    if (e.key === 'Tab') {
+                        if (e.shiftKey) {
+                            if (document.activeElement === firstElement) {
+                                e.preventDefault();
+                                lastElement.focus();
+                            }
+                        } else {
+                            if (document.activeElement === lastElement) {
+                                e.preventDefault();
+                                firstElement.focus();
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    },
+    
+    closeAllModals() {
+        const modals = document.querySelectorAll('.modal, [role="dialog"]');
+        modals.forEach(modal => {
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+        });
+    }
+};
+
+// Performance optimizations
+const performanceUtils = {
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    },
+    
+    throttle(func, limit) {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        };
+    },
+    
+    lazyLoadImages() {
+        const images = document.querySelectorAll('img[data-src]');
+        images.forEach(img => {
+            lazyLoadObserver.observe(img);
+        });
+    },
+    
+    preloadCriticalResources() {
+        const criticalResources = [
+            '/styles.css',
+            '/app.js',
+            '/darkMode.js'
+        ];
+        
+        criticalResources.forEach(resource => {
+            const link = document.createElement('link');
+            link.rel = 'preload';
+            link.href = resource;
+            link.as = resource.endsWith('.css') ? 'style' : 'script';
+            document.head.appendChild(link);
+        });
+    }
+};
+
 // Authentication Functions
 function showAuthModal() {
     document.getElementById('auth-modal').classList.remove('hidden');
@@ -9,47 +317,48 @@ function hideAuthModal() {
     document.getElementById('auth-modal').classList.add('hidden');
 }
 
-// Real Authentication System with Cloud Sync
+// Simple Authentication System with Local Storage
 class FocusFlowAuth {
     constructor() {
-        // Use real API URL - replace with your deployed backend URL
-        this.apiUrl = 'http://localhost:3001/api';  // Local development
         this.isAuthenticated = false;
         this.currentUser = null;
-        
-        // Use real fetch for local development
-        this.fetch = window.fetch;
+        this.loadUserDataLocally();
     }
 
-    async signUp(email, password) {
+    async signUp(email, password, name = null) {
         try {
-            const response = await this.fetch(`${this.apiUrl}/auth/signup`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                    deviceInfo: this.getDeviceInfo()
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.setAuthToken(data.token);
-                this.currentUser = data.user;
-                this.isAuthenticated = true;
-                
-                // Save user data locally for offline access
-                this.saveUserDataLocally(data.user);
-                
-                console.log('User signed up successfully:', data.user);
-                return { success: true, user: data.user };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Sign up failed');
+            // Check if user already exists
+            const existingUser = this.getUserByEmail(email);
+            if (existingUser) {
+                return { success: false, error: 'User already exists. Please sign in instead.' };
             }
+
+            // Create new user
+            const user = {
+                id: this.generateUserId(),
+                email: email,
+                name: name || email.split('@')[0],
+                createdAt: new Date().toISOString(),
+                preferences: {
+                    mode: 'zen',
+                    lockScreenWidget: true,
+                    widgetStyle: 'zen_minimal'
+                },
+                progress: {
+                    todayMinutes: 0,
+                    totalSessions: 0,
+                    streak: 0,
+                    lastSessionDate: null
+                }
+            };
+
+            // Save user data
+            this.saveUserDataLocally(user);
+            this.currentUser = user;
+            this.isAuthenticated = true;
+
+            console.log('User signed up successfully:', user);
+            return { success: true, user: user };
         } catch (error) {
             console.error('Sign up error:', error);
             return { success: false, error: error.message };
@@ -58,66 +367,133 @@ class FocusFlowAuth {
 
     async signIn(email, password) {
         try {
-            const response = await this.fetch(`${this.apiUrl}/auth/signin`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                    deviceInfo: this.getDeviceInfo()
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.setAuthToken(data.token);
-                this.currentUser = data.user;
-                this.isAuthenticated = true;
-                
-                // Save user data locally for offline access
-                this.saveUserDataLocally(data.user);
-                
-                console.log('User signed in successfully:', data.user);
-                return { success: true, user: data.user };
-            } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Sign in failed');
+            // For demo purposes, accept any email/password combination
+            // In a real app, you'd verify the password
+            const user = this.getUserByEmail(email);
+            
+            if (!user) {
+                // Create user if they don't exist (demo behavior)
+                return await this.signUp(email, password);
             }
+
+            this.currentUser = user;
+            this.isAuthenticated = true;
+            this.saveUserDataLocally(user);
+
+            console.log('User signed in successfully:', user);
+            return { success: true, user: user };
         } catch (error) {
             console.error('Sign in error:', error);
             return { success: false, error: error.message };
         }
     }
 
-    async syncProgress(progress) {
-        if (!this.isAuthenticated) return false;
+    async signInWithGoogle(email, name) {
+        try {
+            // Check if user exists
+            let user = this.getUserByEmail(email);
+            
+            if (!user) {
+                // Create new user
+                user = {
+                    id: this.generateUserId(),
+                    email: email,
+                    name: name || email.split('@')[0],
+                    provider: 'google',
+                    createdAt: new Date().toISOString(),
+                    preferences: {
+                        mode: 'zen',
+                        lockScreenWidget: true,
+                        widgetStyle: 'zen_minimal'
+                    },
+                    progress: {
+                        todayMinutes: 0,
+                        totalSessions: 0,
+                        streak: 0,
+                        lastSessionDate: null
+                    }
+                };
+            }
+
+            this.currentUser = user;
+            this.isAuthenticated = true;
+            this.saveUserDataLocally(user);
+
+            console.log('Google sign in successful:', user);
+            return { success: true, user: user };
+        } catch (error) {
+            console.error('Google sign in error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async signInWithApple(email, name) {
+        try {
+            // Check if user exists
+            let user = this.getUserByEmail(email);
+            
+            if (!user) {
+                // Create new user
+                user = {
+                    id: this.generateUserId(),
+                    email: email,
+                    name: name || email.split('@')[0],
+                    provider: 'apple',
+                    createdAt: new Date().toISOString(),
+                    preferences: {
+                        mode: 'zen',
+                        lockScreenWidget: true,
+                        widgetStyle: 'zen_minimal'
+                    },
+                    progress: {
+                        todayMinutes: 0,
+                        totalSessions: 0,
+                        streak: 0,
+                        lastSessionDate: null
+                    }
+                };
+            }
+
+            this.currentUser = user;
+            this.isAuthenticated = true;
+            this.saveUserDataLocally(user);
+
+            console.log('Apple sign in successful:', user);
+            return { success: true, user: user };
+        } catch (error) {
+            console.error('Apple sign in error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async updateProfile(name, preferences) {
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
         
         try {
-            const response = await this.fetch(`${this.apiUrl}/progress/sync`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                },
-                body: JSON.stringify({
-                    progress: progress,
-                    lastSync: new Date().toISOString()
-                })
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Progress synced successfully:', data);
-                return true;
-            } else {
-                console.error('Failed to sync progress');
-                return false;
-            }
+            this.currentUser.name = name || this.currentUser.name;
+            this.currentUser.preferences = { ...this.currentUser.preferences, ...preferences };
+            this.saveUserDataLocally(this.currentUser);
+            
+            console.log('Profile updated successfully:', this.currentUser);
+            return { success: true, user: this.currentUser };
         } catch (error) {
-            console.error('Sync error:', error);
-            return false;
+            console.error('Profile update error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    async syncProgress(progress) {
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
+        
+        try {
+            this.currentUser.progress = { ...this.currentUser.progress, ...progress };
+            this.saveUserDataLocally(this.currentUser);
+            
+            console.log('Progress synced successfully:', this.currentUser.progress);
+            return { success: true, progress: this.currentUser.progress };
+        } catch (error) {
+            console.error('Progress sync error:', error);
+            return { success: false, error: error.message };
         }
     }
 
@@ -125,21 +501,12 @@ class FocusFlowAuth {
         if (!this.isAuthenticated) return null;
         
         try {
-            const response = await this.fetch(`${this.apiUrl}/progress/load`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${this.getAuthToken()}`
-                }
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log('Progress loaded successfully:', data);
-                return data.progress;
-            } else {
-                console.error('Failed to load progress');
-                return null;
-            }
+            return this.currentUser.progress || {
+                todayMinutes: 0,
+                totalSessions: 0,
+                streak: 0,
+                lastSessionDate: null
+            };
         } catch (error) {
             console.error('Load progress error:', error);
             return null;
@@ -159,169 +526,158 @@ class FocusFlowAuth {
             userAgent: navigator.userAgent,
             platform: navigator.platform,
             language: navigator.language,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            screenSize: `${screen.width}x${screen.height}`,
-            deviceId: this.getDeviceId()
+            cookieEnabled: navigator.cookieEnabled,
+            onLine: navigator.onLine,
+            screenWidth: screen.width,
+            screenHeight: screen.height,
+            viewportWidth: window.innerWidth,
+            viewportHeight: window.innerHeight
         };
     }
 
     getDeviceId() {
         let deviceId = localStorage.getItem('focusflow_device_id');
         if (!deviceId) {
-            deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
             localStorage.setItem('focusflow_device_id', deviceId);
         }
         return deviceId;
     }
 
     saveUserDataLocally(user) {
-        localStorage.setItem('focusflow_user_id', user.id);
-        localStorage.setItem('focusflow_user_email', user.email);
-        localStorage.setItem('focusflow_user_data', JSON.stringify(user));
+        const users = JSON.parse(localStorage.getItem('focusflow_users') || '[]');
+        const existingIndex = users.findIndex(u => u.id === user.id);
+        
+        if (existingIndex >= 0) {
+            users[existingIndex] = user;
+        } else {
+            users.push(user);
+        }
+        
+        localStorage.setItem('focusflow_users', JSON.stringify(users));
+        localStorage.setItem('focusflow_current_user', JSON.stringify(user));
     }
 
     loadUserDataLocally() {
-        const userData = localStorage.getItem('focusflow_user_data');
-        if (userData) {
-            this.currentUser = JSON.parse(userData);
+        const currentUser = localStorage.getItem('focusflow_current_user');
+        if (currentUser) {
+            this.currentUser = JSON.parse(currentUser);
             this.isAuthenticated = true;
-            return this.currentUser;
         }
-        return null;
     }
 
     signOut() {
-        this.isAuthenticated = false;
         this.currentUser = null;
+        this.isAuthenticated = false;
+        localStorage.removeItem('focusflow_current_user');
         localStorage.removeItem('focusflow_auth_token');
-        localStorage.removeItem('focusflow_user_id');
-        localStorage.removeItem('focusflow_user_email');
-        localStorage.removeItem('focusflow_user_data');
         console.log('User signed out');
     }
 
     isUserAuthenticated() {
-        return this.isAuthenticated && this.getAuthToken();
+        return this.isAuthenticated && this.currentUser !== null;
+    }
+
+    async updateLockScreenWidgetPreference(enabled) {
+        if (!this.isAuthenticated) return { success: false, error: 'Not authenticated' };
+        
+        try {
+            this.currentUser.preferences.lockScreenWidget = enabled;
+            this.saveUserDataLocally(this.currentUser);
+            
+            console.log('Lock screen widget preference updated:', enabled);
+            return { success: true, enabled: enabled };
+        } catch (error) {
+            console.error('Update lock screen widget preference error:', error);
+            return { success: false, error: error.message };
+        }
+    }
+
+    getLockScreenWidgetPreference() {
+        return this.currentUser?.preferences?.lockScreenWidget || false;
+    }
+
+    generateUserId() {
+        return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    getUserByEmail(email) {
+        const users = JSON.parse(localStorage.getItem('focusflow_users') || '[]');
+        return users.find(user => user.email === email);
     }
 }
 
 // Initialize authentication
 const focusFlowAuth = new FocusFlowAuth();
 
-function getDeviceId() {
-    // Generate a device-specific ID
-    let deviceId = localStorage.getItem('focusflow_device_id');
-    if (!deviceId) {
-        deviceId = 'device_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('focusflow_device_id', deviceId);
-    }
-    return deviceId;
-}
-
-function getUserAccount() {
-    const userId = localStorage.getItem('focusflow_user_id');
-    if (!userId) return null;
-    
-    const userData = localStorage.getItem(`focusflow_user_${userId}`);
-    return userData ? JSON.parse(userData) : null;
-}
-
-function saveUserProgress(progress) {
-    const userAccount = getUserAccount();
-    if (!userAccount) return;
-    
-    userAccount.progress = { ...userAccount.progress, ...progress };
-    userAccount.lastLogin = new Date().toISOString();
-    
-    localStorage.setItem(`focusflow_user_${userAccount.id}`, JSON.stringify(userAccount));
-    console.log('User progress saved:', userAccount.progress);
-}
-
-function saveUserPreferences(preferences) {
-    const userAccount = getUserAccount();
-    if (!userAccount) return;
-    
-    userAccount.preferences = { ...userAccount.preferences, ...preferences };
-    userAccount.lastLogin = new Date().toISOString();
-    
-    localStorage.setItem(`focusflow_user_${userAccount.id}`, JSON.stringify(userAccount));
-    console.log('User preferences saved:', userAccount.preferences);
-}
-
-function signOut() {
-    const userId = localStorage.getItem('focusflow_user_id');
-    if (userId) {
-        // Remove user-specific data
-        localStorage.removeItem(`focusflow_user_${userId}`);
-    }
-    
-    // Clear all focusflow data
-    const keysToRemove = [
-        'focusflow_user_id',
-        'focusflow_user_email',
-        'focusflow_onboarding_completed',
-        'focusflow_user_preferences',
-        'focusflow_progress',
-        'focusflow_mode'
-    ];
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-    
-    console.log('User signed out, all data cleared');
-    window.location.reload();
-}
-
-// Test DOM elements exist
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded');
-    
-    // Test if key elements exist
-    const loadingScreen = document.getElementById('loading-screen');
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const onboarding = document.getElementById('onboarding');
-    const mainApp = document.getElementById('main-app');
-    
-    console.log('Elements found:', {
-        loadingScreen: !!loadingScreen,
-        welcomeScreen: !!welcomeScreen,
-        onboarding: !!onboarding,
-        mainApp: !!mainApp
-    });
-    
-    // Show loading screen immediately
-    if (loadingScreen) {
-        loadingScreen.classList.remove('hidden');
-        console.log('Loading screen should be visible');
-    }
-    
-    // Reset onboarding state to ensure proper flow
-    localStorage.removeItem('focusflow_onboarding_completed');
-    localStorage.removeItem('focusflow_user_preferences');
-    console.log('FocusFlow script loaded, onboarding reset.');
-    
-    new FocusFlow();
-});
-
+// Main FocusFlow Application Class
 class FocusFlow {
     constructor() {
-        console.log('FocusFlow constructor called');
-        this.currentStep = 0;
-        this.userPreferences = {};
-        this.timer = null;
-        this.timerInterval = null;
-        this.currentTime = 0;
-        this.isRunning = false;
-        this.currentMode = 'zen';
-        this.quotes = this.initializeQuotes();
-        this.progress = {
-            todayMinutes: 0,
-            totalSessions: 0,
-            streak: 0,
-            lastSessionDate: null,
-            totalFocusTime: 0,
-            completedSessions: []
-        };
+        const startTime = performance.now();
         
+        // Initialize performance tracking
+        this.performanceMetrics = performanceMetrics;
+        this.trackPerformance = trackPerformance;
+        
+        // Initialize utilities
+        this.responsiveUtils = responsiveUtils;
+        this.touchHandler = touchHandler;
+        this.accessibilityUtils = accessibilityUtils;
+        this.performanceUtils = performanceUtils;
+        
+        // Core properties
+        this.auth = new FocusFlowAuth();
+        this.currentMode = 'zen';
+        this.timer = null;
+        this.timerDuration = 25 * 60; // 25 minutes in seconds
+        this.timerRunning = false;
+        this.timerPaused = false;
+        this.timerStartTime = null;
+        this.timerPauseTime = null;
+        this.timerPauseDuration = 0;
+        this.backgroundTimer = null;
+        this.currentStep = 1;
+        this.totalSteps = 6;
+        this.onboardingComplete = false;
+        this.userPreferences = {};
+        this.quotes = [];
+        this.currentQuoteIndex = 0;
+        this.schedule = [];
+        this.notificationPermission = false;
+        this.analyticsData = {};
+        this.distractionSettings = {
+            enabled: false,
+            inactivityThreshold: 30000, // 30 seconds
+            breakReminders: true,
+            activityTracking: false
+        };
+        this.inactivityTimer = null;
+        this.lastActivityTime = Date.now();
+        
+        // Initialize responsive design
+        this.responsiveUtils.updateResponsiveClasses();
+        window.addEventListener('resize', this.performanceUtils.debounce(() => {
+            this.responsiveUtils.updateResponsiveClasses();
+        }, 250));
+        
+        // Initialize touch handling
+        this.touchHandler.init();
+        
+        // Initialize accessibility
+        this.accessibilityUtils.init();
+        
+        // Preload critical resources
+        this.performanceUtils.preloadCriticalResources();
+        
+        // Register service worker
+        registerServiceWorker();
+        
+        // Track initialization performance
+        this.trackPerformance('App Initialization', startTime);
+        
+        console.log('FocusFlow initialized with performance optimizations');
+        
+        // Initialize the app
         this.initializeApp();
     }
 
@@ -332,16 +688,19 @@ class FocusFlow {
             lucide.createIcons();
         }
 
+        // Initialize dark mode
+        this.initializeDarkMode();
+
         // Load progress asynchronously
         this.progress = await this.loadProgress();
 
-        // Check if user is authenticated
-        const isAuthenticated = focusFlowAuth.isUserAuthenticated();
-        console.log('isAuthenticated:', isAuthenticated);
+        // Check if user is authenticated or in guest mode
+        const isAuthenticated = this.auth.isUserAuthenticated();
+        const isGuestMode = localStorage.getItem('focusflow_guest') === 'true';
+        const hasCompletedOnboarding = localStorage.getItem('focusflow_onboarding_completed');
         
-        if (isAuthenticated) {
-            // User is logged in, check if they've completed onboarding
-            const hasCompletedOnboarding = localStorage.getItem('focusflow_onboarding_completed');
+        if (isAuthenticated || isGuestMode) {
+            // User is logged in or in guest mode, check if they've completed onboarding
             if (hasCompletedOnboarding) {
                 this.showMainApp();
             } else {
@@ -356,6 +715,23 @@ class FocusFlow {
         this.loadUserPreferences();
         this.loadTimerState(); // Load any running timer
         this.updateUI();
+        this.initializeScheduling();
+    }
+
+    initializeDarkMode() {
+        // Initialize dark mode if the darkMode object exists
+        if (window.darkMode) {
+            console.log('Dark mode initialized');
+        } else {
+            console.log('Dark mode not available, using fallback');
+            // Fallback: check localStorage for theme preference
+            const savedTheme = localStorage.getItem('focusflow_dark_mode');
+            if (savedTheme === 'true') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        }
     }
 
     bindEvents() {
@@ -368,6 +744,12 @@ class FocusFlow {
             console.log('Start onboarding clicked');
             this.startOnboarding();
         });
+
+        // Widget size switching functionality
+        this.bindWidgetSizeEvents();
+        
+        // Widget interaction events
+        this.bindWidgetInteractionEvents();
 
         // Sign in button
         const signInBtn = document.getElementById('sign-in-btn');
@@ -455,18 +837,47 @@ class FocusFlow {
 
         // Sign out button
         document.getElementById('sign-out-btn')?.addEventListener('click', () => {
-            signOut();
+            focusFlowAuth.signOut();
+            this.showWelcomeScreen();
         });
 
-        // Only use the settings button to open the settings modal
+        // Dark mode toggle button
+        const darkModeToggleBtn = document.getElementById('dark-mode-toggle');
+        if (darkModeToggleBtn) {
+            // Make the button draggable
+            this.makeDraggable(darkModeToggleBtn);
+            
+            darkModeToggleBtn.onclick = () => {
+                // Use the darkMode.js functionality
+                if (window.darkMode) {
+                    window.darkMode.toggle();
+                } else {
+                    // Fallback to direct theme switching
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const isDark = currentTheme === 'dark';
+                    
+                    if (isDark) {
+                        document.documentElement.setAttribute('data-theme', 'light');
+                        localStorage.setItem('focusflow_dark_mode', 'false');
+                    } else {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                        localStorage.setItem('focusflow_dark_mode', 'true');
+                    }
+                }
+                
+                // Update icon and UI after theme change
+                this.updateDarkModeIcon();
+                this.renderLockScreenWidgetPreview();
+                this.renderUserSummary();
+                this.updateUI();
+            };
+        }
+
+        // Mode toggle button - cycles through Zen, Achievement, and Hybrid modes
         const modeToggleBtn = document.getElementById('mode-toggle');
         if (modeToggleBtn) {
-            modeToggleBtn.onclick = null;
-        }
-        // Add dark mode toggle to the moon icon
-        if (modeToggleBtn) {
             modeToggleBtn.onclick = () => {
-                document.body.classList.toggle('dark-theme');
+                this.toggleMode();
                 this.renderLockScreenWidgetPreview();
                 this.renderUserSummary();
                 this.updateUI();
@@ -497,7 +908,13 @@ class FocusFlow {
         if (guestBtn) guestBtn.onclick = () => {
             localStorage.setItem('focusflow_guest', 'true');
             hideAuthModal();
-            this.showWelcomeScreen();
+            // Check if onboarding is already completed
+            const hasCompletedOnboarding = localStorage.getItem('focusflow_onboarding_completed');
+            if (hasCompletedOnboarding) {
+                this.showMainApp();
+            } else {
+                this.showWelcomeScreen();
+            }
         };
 
         const emailForm = document.getElementById('email-auth-form');
@@ -549,58 +966,78 @@ class FocusFlow {
         };
 
         const googleBtn = document.getElementById('google-signin');
-        if (googleBtn) googleBtn.onclick = () => {
+        if (googleBtn) googleBtn.onclick = async () => {
             // Simulate Google sign-in
             const email = 'user@gmail.com';
-            if (authenticateUser(email, 'google')) {
-                hideAuthModal();
+            const name = 'Google User';
+            
+            try {
+                const result = await focusFlowAuth.signInWithGoogle(email, name);
                 
-                // Show success message
-                const successMessage = document.createElement('div');
-                successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
-                successMessage.innerHTML = `
-                    <div class="flex items-center">
-                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                        <span>Account created! Your progress will be saved to your device.</span>
-                    </div>
-                `;
-                document.body.appendChild(successMessage);
-                
-                // Remove message after 3 seconds
-                setTimeout(() => {
-                    successMessage.style.opacity = '0';
-                    setTimeout(() => successMessage.remove(), 300);
-                }, 3000);
-                
-                this.showWelcomeScreen();
+                if (result.success) {
+                    hideAuthModal();
+                    
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
+                    successMessage.innerHTML = `
+                        <div class="flex items-center">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                            <span>Signed in with Google! Your progress will be saved to your device.</span>
+                        </div>
+                    `;
+                    document.body.appendChild(successMessage);
+                    
+                    // Remove message after 3 seconds
+                    setTimeout(() => {
+                        successMessage.style.opacity = '0';
+                        setTimeout(() => successMessage.remove(), 300);
+                    }, 3000);
+                    
+                    this.showWelcomeScreen();
+                } else {
+                    alert(`Google sign-in failed: ${result.error}`);
+                }
+            } catch (error) {
+                alert('Network error. Please check your connection and try again.');
             }
         };
 
         const appleBtn = document.getElementById('apple-signin');
-        if (appleBtn) appleBtn.onclick = () => {
+        if (appleBtn) appleBtn.onclick = async () => {
             // Simulate Apple sign-in
             const email = 'user@icloud.com';
-            if (authenticateUser(email, 'apple')) {
-                hideAuthModal();
+            const name = 'Apple User';
+            
+            try {
+                const result = await focusFlowAuth.signInWithApple(email, name);
                 
-                // Show success message
-                const successMessage = document.createElement('div');
-                successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
-                successMessage.innerHTML = `
-                    <div class="flex items-center">
-                        <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
-                        <span>Account created! Your progress will be saved to your device.</span>
-                    </div>
-                `;
-                document.body.appendChild(successMessage);
-                
-                // Remove message after 3 seconds
-                setTimeout(() => {
-                    successMessage.style.opacity = '0';
-                    setTimeout(() => successMessage.remove(), 300);
-                }, 3000);
-                
-                this.showWelcomeScreen();
+                if (result.success) {
+                    hideAuthModal();
+                    
+                    // Show success message
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 fade-in';
+                    successMessage.innerHTML = `
+                        <div class="flex items-center">
+                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+                            <span>Signed in with Apple! Your progress will be saved to your device.</span>
+                        </div>
+                    `;
+                    document.body.appendChild(successMessage);
+                    
+                    // Remove message after 3 seconds
+                    setTimeout(() => {
+                        successMessage.style.opacity = '0';
+                        setTimeout(() => successMessage.remove(), 300);
+                    }, 3000);
+                    
+                    this.showWelcomeScreen();
+                } else {
+                    alert(`Apple sign-in failed: ${result.error}`);
+                }
+            } catch (error) {
+                alert('Network error. Please check your connection and try again.');
             }
         };
     }
@@ -744,15 +1181,6 @@ class FocusFlow {
                     { value: "yes", label: "Yes" },
                     { value: "no", label: "No" }
                 ]
-            },
-            {
-                title: "Which lock screen widget style do you prefer?",
-                type: "widget_style",
-                options: [
-                    { value: "zen_minimal", label: "Zen Minimal" },
-                    { value: "achievement_vibrant", label: "Achievement Vibrant" },
-                    { value: "hybrid_adaptive", label: "Hybrid Adaptive" }
-                ]
             }
         ];
 
@@ -761,10 +1189,10 @@ class FocusFlow {
         
         console.log('Question container found:', !!container);
         
-        // Single smooth transition - no separate fade out/in
-        container.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        // Smooth transition similar to welcome screen to first question
+        container.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
         container.style.opacity = '0';
-        container.style.transform = 'translateY(10px)';
+        container.style.transform = 'translateY(-20px) scale(0.98)';
         
         setTimeout(() => {
             let html = `
@@ -783,9 +1211,9 @@ class FocusFlow {
                 html += '<div class="space-y-4 max-w-2xl mx-auto pb-8" role="radiogroup" aria-label="' + question.title + '">';
                 question.options.forEach((option, index) => {
                     html += `
-                        <label class="flex items-center p-6 bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl hover:bg-white/90 hover:border-blue-200 cursor-pointer transition-all duration-500 radio-option shadow-sm hover:shadow-md" tabindex="0">
+                        <label class="flex items-center p-6 bg-white/95 backdrop-blur-md border border-white/60 rounded-2xl hover:bg-white hover:border-blue-300 cursor-pointer transition-all duration-300 radio-option shadow-lg hover:shadow-xl" tabindex="0">
                             <input type="radio" name="question_${step}" value="${option.value}" class="mr-4 w-5 h-5 text-blue-600" ${index === 0 ? 'checked' : ''} aria-checked="${index === 0 ? 'true' : 'false'}" aria-label="${option.label}">
-                            <span class="text-slate-700 text-left leading-relaxed text-lg">${option.label}</span>
+                            <span class="text-gray-800 text-left leading-relaxed text-lg font-medium">${option.label}</span>
                         </label>
                     `;
                 });
@@ -794,14 +1222,14 @@ class FocusFlow {
             html += '</div>';
             container.innerHTML = html;
             
-            // Smooth fade in with single motion
+            // Smooth entrance similar to onboarding entrance
             container.style.opacity = '1';
-            container.style.transform = 'translateY(0)';
+            container.style.transform = 'translateY(0) scale(1)';
             
             // Clean up transition after completion
             setTimeout(() => {
                 container.style.transition = '';
-            }, 800);
+            }, 600);
             
             // Focus management: focus first radio or question title
             const firstRadio = container.querySelector('input[type="radio"]');
@@ -863,70 +1291,177 @@ class FocusFlow {
                 console.log('Previous button clicked'); 
                 this.previousStep(); 
             };
-        }, 200);
+        }, 100);
     }
 
     generateWidgetPreview(step = 5) {
+        console.log('Generating enhanced widget preview for step:', step);
         return `
             <div class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="widget-preview-card widget-zen p-4 rounded-lg border">
-                        <div class="text-center">
-                            <div class="text-2xl font-mono text-gray-700">25:00</div>
-                            <div class="text-sm text-gray-600">Focus Session</div>
-                            <div class="text-xs text-gray-500 mt-1">Zen Mode</div>
+                <!-- Widget Size Selection -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-semibold mb-3" style="color: var(--text-primary);">Choose Widget Size:</h4>
+                    <div class="flex space-x-3 mb-4">
+                        <button class="widget-size-btn widget-size-small px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200" data-size="small">
+                            Small
+                        </button>
+                        <button class="widget-size-btn widget-size-medium px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 active" data-size="medium">
+                            Medium
+                        </button>
+                        <button class="widget-size-btn widget-size-large px-4 py-2 rounded-lg text-base font-medium transition-all duration-200" data-size="large">
+                            Large
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Enhanced Widget Grid -->
+                <div class="widget-grid widget-grid-responsive gap-4 mb-6">
+                    <!-- Zen Mode Widget -->
+                    <div class="widget widget-zen widget-medium widget-interactive widget-enter" data-mode="zen">
+                        <div class="widget-content">
+                            <div class="widget-header">
+                                <div class="widget-title">Zen Focus</div>
+                                <div class="text-xs opacity-75">Minimal</div>
+                            </div>
+                            <div class="widget-body text-center">
+                                <div class="text-2xl font-mono font-bold">25:00</div>
+                                <div class="text-sm opacity-90">Focus Session</div>
+                                <div class="mt-2 flex justify-center space-x-1">
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-60"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-80"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="widget-preview-card widget-achievement p-4 rounded-lg border">
-                        <div class="text-center">
-                            <div class="text-2xl font-mono text-white">25:00</div>
-                            <div class="text-sm text-white opacity-90">Focus Session</div>
-                            <div class="text-xs text-white opacity-75 mt-1">Achievement Mode</div>
+                    
+                    <!-- Achievement Mode Widget -->
+                    <div class="widget widget-achievement widget-medium widget-interactive widget-enter" data-mode="achievement">
+                        <div class="widget-content">
+                            <div class="widget-header">
+                                <div class="widget-title">Achievement</div>
+                                <div class="text-xs opacity-75">Vibrant</div>
+                            </div>
+                            <div class="widget-body text-center">
+                                <div class="text-2xl font-mono font-bold">25:00</div>
+                                <div class="text-sm opacity-90">Focus Session</div>
+                                <div class="mt-2 flex justify-center space-x-1">
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-60"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-80"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="widget-preview-card widget-hybrid p-4 rounded-lg border">
-                        <div class="text-center">
-                            <div class="text-2xl font-mono text-white">25:00</div>
-                            <div class="text-sm text-white opacity-90">Focus Session</div>
-                            <div class="text-xs text-white opacity-75 mt-1">Hybrid Mode</div>
+                    
+                    <!-- Hybrid Mode Widget -->
+                    <div class="widget widget-hybrid widget-medium widget-interactive widget-enter" data-mode="hybrid">
+                        <div class="widget-content">
+                            <div class="widget-header">
+                                <div class="widget-title">Hybrid</div>
+                                <div class="text-xs opacity-75">Balanced</div>
+                            </div>
+                            <div class="widget-body text-center">
+                                <div class="text-2xl font-mono font-bold">25:00</div>
+                                <div class="text-sm opacity-90">Focus Session</div>
+                                <div class="mt-2 flex justify-center space-x-1">
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-60"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white opacity-80"></div>
+                                    <div class="w-2 h-2 rounded-full bg-white"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Enhanced Mode Color Legend -->
+                <div class="widget widget-card widget-medium">
+                    <div class="widget-content">
+                        <div class="widget-header">
+                            <div class="widget-title">Interface Mode Colors</div>
+                        </div>
+                        <div class="widget-body">
+                            <div class="grid grid-cols-3 gap-4 text-xs">
+                                <div class="text-center">
+                                    <div class="flex justify-center space-x-1 mb-2">
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--zen-primary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--zen-secondary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--zen-accent)"></div>
+                                    </div>
+                                    <div class="font-medium">Zen Mode</div>
+                                    <div class="opacity-75">Muted Grays</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="flex justify-center space-x-1 mb-2">
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--achievement-primary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--achievement-secondary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--achievement-accent)"></div>
+                                    </div>
+                                    <div class="font-medium">Achievement</div>
+                                    <div class="opacity-75">Vibrant Greens</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="flex justify-center space-x-1 mb-2">
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--hybrid-primary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--hybrid-secondary)"></div>
+                                        <div class="w-3 h-3 rounded-full" style="background: var(--hybrid-accent)"></div>
+                                    </div>
+                                    <div class="font-medium">Hybrid Mode</div>
+                                    <div class="opacity-75">Balanced Purples</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Widget Options -->
                 <div class="space-y-3">
-                    <label class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200">
-                        <input type="radio" name="question_${step}" value="yes" class="mr-3" checked>
-                        <span class="text-gray-700">Yes, show timer on lock screen</span>
+                    <label class="widget widget-interactive widget-card widget-medium cursor-pointer transition-all duration-200 hover:shadow-lg">
+                        <input type="radio" name="question_${step}" value="yes" class="hidden" checked>
+                        <div class="widget-content">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full border-2 border-current mr-3 radio-indicator"></div>
+                                <span class="font-medium">Yes, show timer on lock screen</span>
+                            </div>
+                        </div>
                     </label>
-                    <label class="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-200">
-                        <input type="radio" name="question_${step}" value="no" class="mr-3">
-                        <span class="text-gray-700">No, keep it simple</span>
+                    <label class="widget widget-interactive widget-card widget-medium cursor-pointer transition-all duration-200 hover:shadow-lg">
+                        <input type="radio" name="question_${step}" value="no" class="hidden">
+                        <div class="widget-content">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full border-2 border-current mr-3 radio-indicator"></div>
+                                <span class="font-medium">No, keep it simple</span>
+                            </div>
+                        </div>
                     </label>
                 </div>
             </div>
         `;
     }
 
+
+
     generateWidgetStyleSelection(step) {
         return `
             <div class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <label class="widget-preview-card widget-zen p-4 rounded-lg border flex flex-col items-center cursor-pointer">
-                        <input type="radio" name="question_${step}" value="zen_minimal" class="mb-2" checked>
-                        <div class="text-2xl font-mono text-gray-700">25:00</div>
-                        <div class="text-sm text-gray-600">Focus Session</div>
-                        <div class="text-xs text-gray-500 mt-1">Zen Minimal</div>
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative shadow-lg" style="background: var(--bg-secondary); border-color: var(--border-color);">
+                        <input type="radio" name="question_${step}" value="zen_minimal" class="absolute top-2 right-2" checked>
+                        <div class="text-2xl font-mono font-bold" style="color: var(--text-primary);">25:00</div>
+                        <div class="text-sm font-medium" style="color: var(--text-secondary);">Focus Session</div>
+                        <div class="text-xs mt-1 font-medium" style="color: var(--text-muted);">Zen Minimal</div>
                     </label>
-                    <label class="widget-preview-card widget-achievement p-4 rounded-lg border flex flex-col items-center cursor-pointer">
-                        <input type="radio" name="question_${step}" value="achievement_vibrant" class="mb-2">
-                        <div class="text-2xl font-mono text-green-600">25:00</div>
-                        <div class="text-sm text-green-700">Focus Session</div>
-                        <div class="text-xs text-green-500 mt-1">Achievement Vibrant</div>
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative shadow-lg" style="background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981;">
+                        <input type="radio" name="question_${step}" value="achievement_vibrant" class="absolute top-2 right-2">
+                        <div class="text-2xl font-mono font-bold text-white">25:00</div>
+                        <div class="text-sm font-medium text-white opacity-90">Focus Session</div>
+                        <div class="text-xs font-medium text-white opacity-75 mt-1">Achievement Vibrant</div>
                     </label>
-                    <label class="widget-preview-card widget-hybrid p-4 rounded-lg border flex flex-col items-center cursor-pointer">
-                        <input type="radio" name="question_${step}" value="hybrid_adaptive" class="mb-2">
-                        <div class="text-2xl font-mono text-purple-600">25:00</div>
-                        <div class="text-sm text-purple-700">Focus Session</div>
-                        <div class="text-xs text-purple-500 mt-1">Hybrid Adaptive</div>
+                    <label class="widget-preview-card p-4 rounded-lg border flex flex-col items-center cursor-pointer hover:shadow-lg transition-all duration-200 relative shadow-lg" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); border-color: #8b5cf6;">
+                        <input type="radio" name="question_${step}" value="hybrid_adaptive" class="absolute top-2 right-2">
+                        <div class="text-2xl font-mono font-bold text-white">25:00</div>
+                        <div class="text-sm font-medium text-white opacity-90">Focus Session</div>
+                        <div class="text-xs font-medium text-white opacity-75 mt-1">Hybrid Adaptive</div>
                     </label>
                 </div>
             </div>
@@ -958,7 +1493,7 @@ class FocusFlow {
         const questionKeys = ['focusChallenge', 'energyPattern', 'primaryGoal', 'motivationStyle', 'sessionLength', 'lockScreenWidget', 'widgetStyle'];
         this.userPreferences[questionKeys[this.currentStep]] = currentQuestion.value;
 
-        if (this.currentStep < 6) {
+        if (this.currentStep < 5) {
             this.currentStep++;
             this.showQuestion(this.currentStep);
         } else {
@@ -976,14 +1511,20 @@ class FocusFlow {
     completeOnboarding() {
         console.log('Completing onboarding');
         
-        // Save user preferences to account if authenticated
-        const userAccount = getUserAccount();
-        if (userAccount) {
-            saveUserPreferences(this.userPreferences);
-            console.log('Preferences saved to user account');
+        // Save user preferences
+        if (focusFlowAuth.isUserAuthenticated()) {
+            // User is authenticated, save to their account
+            focusFlowAuth.updateProfile(null, this.userPreferences);
+            console.log('Preferences saved to authenticated user account');
+            
+            // Save lock screen widget preference
+            const lockScreenEnabled = this.userPreferences.lockScreenWidget === 'yes';
+            focusFlowAuth.updateLockScreenWidgetPreference(lockScreenEnabled);
+            console.log('Lock screen widget preference saved');
         } else {
-            // Fallback to localStorage
+            // User is not authenticated, save to localStorage
             localStorage.setItem('focusflow_user_preferences', JSON.stringify(this.userPreferences));
+            console.log('Preferences saved to localStorage');
         }
         
         localStorage.setItem('focusflow_onboarding_completed', 'true');
@@ -992,22 +1533,12 @@ class FocusFlow {
         const mode = this.userPreferences.motivationStyle === 'achievement_tracking' ? 'achievement' : 'zen';
         this.setMode(mode);
         
-        // Check if user is authenticated
-        const isAuthenticated = localStorage.getItem('focusflow_user_id');
-        const isGuest = localStorage.getItem('focusflow_guest') === 'true';
-        
-        if (!isAuthenticated && !isGuest) {
-            // Show auth modal to save progress
-            showAuthModal();
-        } else {
-            // User is authenticated or guest, show main app
-            document.getElementById('onboarding').classList.add('hidden');
-            this.showMainApp();
-        }
+        // Hide onboarding and show main app
+        document.getElementById('onboarding').classList.add('hidden');
+        this.showMainApp();
     }
 
     showMainApp() {
-        console.log('Showing main app');
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('main-app').classList.remove('hidden');
         
@@ -1043,6 +1574,7 @@ class FocusFlow {
         });
         
         this.applyUserPreferences();
+        this.initializeAnalytics();
         this.updateUI();
     }
 
@@ -1065,30 +1597,65 @@ class FocusFlow {
     renderLockScreenWidgetPreview() {
         const preview = document.getElementById('widget-preview');
         if (!preview) return;
-        let style = this.userPreferences.widgetStyle || 'zen_minimal';
-        let isDark = document.body.classList.contains('dark-theme');
-        let html = '';
-        if (style === 'zen_minimal') {
-            html = `<div class="p-4 rounded-lg border ${isDark ? 'bg-gray-900 text-white border-gray-700' : 'bg-gray-50 text-gray-700 border-gray-200'} text-center">
-                <div class="text-2xl font-mono ${isDark ? 'text-white' : 'text-gray-700'}">25:00</div>
-                <div class="text-sm ${isDark ? 'text-gray-200' : 'text-gray-600'}">Focus Session</div>
-                <div class="text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} mt-1">Zen Minimal</div>
-            </div>`;
-        } else if (style === 'achievement_vibrant') {
-            html = `<div class="p-4 rounded-lg border bg-gradient-to-br ${isDark ? 'from-indigo-900 to-purple-900 text-white border-gray-700' : 'from-green-400 to-purple-500 text-white border-gray-200'} text-center">
-                <div class="text-2xl font-mono">25:00</div>
-                <div class="text-sm opacity-90">Focus Session</div>
-                <div class="text-xs opacity-75 mt-1">Achievement Vibrant</div>
-            </div>`;
-        } else if (style === 'hybrid_adaptive') {
-            html = `<div class="p-4 rounded-lg border ${isDark ? 'bg-gradient-to-br from-gray-800 to-purple-900 text-purple-200 border-gray-700' : 'bg-gradient-to-br from-gray-200 to-purple-200 text-purple-700 border-gray-200'} text-center">
-                <div class="text-2xl font-mono">25:00</div>
-                <div class="text-sm">Focus Session</div>
-                <div class="text-xs mt-1">Hybrid Adaptive</div>
-            </div>`;
+        
+        // Check if user wants to show the lock screen widget
+        const lockScreenEnabled = this.userPreferences.lockScreenWidget === 'yes';
+        
+        if (!lockScreenEnabled) {
+            // Hide the widget if user selected "no"
+            preview.classList.add('hidden');
+            return;
         }
+        
+        let style = this.userPreferences.widgetStyle || 'zen_minimal';
+        let selectedMode = this.userPreferences.selectedWidgetMode || 'zen';
+        let widgetSize = this.userPreferences.widgetSize || 'medium';
+        
+        // Determine widget class based on style and mode
+        let widgetClass = 'widget widget-card';
+        if (style === 'zen_minimal' || selectedMode === 'zen') {
+            widgetClass += ' widget-zen';
+        } else if (style === 'achievement_vibrant' || selectedMode === 'achievement') {
+            widgetClass += ' widget-achievement';
+        } else if (style === 'hybrid_adaptive' || selectedMode === 'hybrid') {
+            widgetClass += ' widget-hybrid';
+        }
+        
+        widgetClass += ` widget-${widgetSize}`;
+        
+        let html = `
+            <div class="${widgetClass} widget-interactive widget-enter">
+                <div class="widget-content">
+                    <div class="widget-header">
+                        <div class="widget-title">${selectedMode === 'zen' ? 'Zen Focus' : selectedMode === 'achievement' ? 'Achievement' : 'Hybrid'}</div>
+                        <div class="text-xs opacity-75">${selectedMode === 'zen' ? 'Minimal' : selectedMode === 'achievement' ? 'Vibrant' : 'Balanced'}</div>
+                    </div>
+                    <div class="widget-body text-center">
+                        <div class="text-2xl font-mono font-bold">25:00</div>
+                        <div class="text-sm opacity-90">Focus Session</div>
+                        <div class="mt-2 flex justify-center space-x-1">
+                            <div class="w-2 h-2 rounded-full bg-current opacity-60"></div>
+                            <div class="w-2 h-2 rounded-full bg-current opacity-80"></div>
+                            <div class="w-2 h-2 rounded-full bg-current"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
         preview.innerHTML = html;
         preview.classList.remove('hidden');
+        
+        // Add animation after a short delay
+        setTimeout(() => {
+            const widget = preview.querySelector('.widget');
+            if (widget) {
+                widget.classList.add('widget-glow');
+                setTimeout(() => {
+                    widget.classList.remove('widget-glow');
+                }, 2000);
+            }
+        }, 100);
     }
 
     renderUserSummary() {
@@ -1103,15 +1670,17 @@ class FocusFlow {
             dashboard.prepend(summary);
         }
         
-        const userAccount = getUserAccount();
         let accountInfo = '';
-        if (userAccount) {
-            const totalHours = Math.floor(userAccount.progress.totalFocusTime / 60);
-            const totalMinutes = userAccount.progress.totalFocusTime % 60;
-            accountInfo = `<div class="text-xs text-blue-600 mb-2">
-                <i data-lucide="user" class="w-3 h-3 inline mr-1"></i>
-                Account: ${userAccount.email} • Total Focus: ${totalHours}h ${totalMinutes}m
-            </div>`;
+        if (focusFlowAuth.isUserAuthenticated()) {
+            const user = focusFlowAuth.currentUser;
+            if (user && user.progress) {
+                const totalHours = Math.floor(user.progress.totalFocusTime / 60) || 0;
+                const totalMinutes = (user.progress.totalFocusTime % 60) || 0;
+                accountInfo = `<div class="text-xs text-blue-600 mb-2">
+                    <i data-lucide="user" class="w-3 h-3 inline mr-1"></i>
+                    Account: ${user.email} • Total Focus: ${totalHours}h ${totalMinutes}m
+                </div>`;
+            }
         }
         
         summary.innerHTML = `
@@ -1125,12 +1694,11 @@ class FocusFlow {
     }
 
     loadUserPreferences() {
-        // Try to load from user account first
-        const userAccount = getUserAccount();
-        if (userAccount && userAccount.preferences) {
-            this.userPreferences = userAccount.preferences;
+        // Try to load from authenticated user first
+        if (focusFlowAuth.isUserAuthenticated() && focusFlowAuth.currentUser?.preferences) {
+            this.userPreferences = focusFlowAuth.currentUser.preferences;
         } else {
-            // Fallback to old localStorage method
+            // Fallback to localStorage method
             const saved = localStorage.getItem('focusflow_user_preferences');
             if (saved) {
                 this.userPreferences = JSON.parse(saved);
@@ -1155,7 +1723,10 @@ class FocusFlow {
         
         console.log('Body classes after mode change:', document.body.className);
         
-        // Zen mode specific enhancements
+        // Always reset styles first to ensure clean transitions
+        this.resetAllModeStyles();
+        
+        // Apply mode-specific enhancements
         if (mode === 'zen') {
             this.enhanceZenMode();
         } else if (mode === 'achievement') {
@@ -1168,37 +1739,183 @@ class FocusFlow {
     }
 
     enhanceZenMode() {
-        console.log('Enhancing Zen mode');
-        // Remove vibrant/gamified UI
-        document.querySelectorAll('.hidden-in-zen').forEach(el => el.classList.add('hidden'));
-        // Minimal timer controls
+        console.log('Enhancing Zen mode - Creating pure, calming experience');
+        
+        // Reset all inline styles that might have been applied by other modes
+        this.resetAllModeStyles();
+        
+        // Apply Zen-specific styling for a truly calming experience
+        const timerContainer = document.getElementById('timer-container');
+        if (timerContainer) {
+            timerContainer.style.background = 'rgba(255, 255, 255, 0.95)';
+            timerContainer.style.backdropFilter = 'blur(20px)';
+            timerContainer.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+            timerContainer.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
+            timerContainer.style.borderRadius = '16px';
+            timerContainer.style.transition = 'all 0.3s ease';
+        }
+
+        // Zen timer display - clean, minimal, calming
         const timerDisplay = document.getElementById('timer-display');
         if (timerDisplay) {
-            timerDisplay.style.fontFamily = "'JetBrains Mono', 'Fira Code', 'Monaco', monospace";
+            timerDisplay.style.fontFamily = "'Inter', sans-serif";
             timerDisplay.style.fontWeight = '300';
-            timerDisplay.style.color = '#374151';
-            timerDisplay.style.background = 'none';
+            timerDisplay.style.fontSize = '3rem';
+            timerDisplay.style.color = '#1e293b';
             timerDisplay.style.textShadow = 'none';
+            timerDisplay.style.background = 'none';
+            timerDisplay.style.letterSpacing = '0.05em';
+            timerDisplay.style.transition = 'all 0.3s ease';
         }
-        // Muted progress bar
-        const progressBar = document.getElementById('progress-bar');
-        if (progressBar) {
-            progressBar.style.background = '#6B7280';
-            progressBar.style.height = '4px';
-            progressBar.style.borderRadius = '2px';
-        }
-        // Muted card backgrounds
-        ['progress-card', 'quote-card', 'user-summary'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.style.background = '#F5F5F5';
-                el.style.color = '#4B5563';
-                el.style.border = '1px solid #E5E7EB';
-                el.style.boxShadow = 'none';
+
+        // Zen progress ring - subtle, calming
+        const progressRing = document.getElementById('progress-ring');
+        if (progressRing) {
+            const circle = progressRing.querySelector('.progress-ring-circle');
+            if (circle) {
+                circle.style.stroke = '#10b981';
+                circle.style.strokeWidth = '3';
+                circle.style.strokeLinecap = 'round';
+                circle.style.transition = 'all 0.3s ease';
             }
+        }
+
+        // Zen buttons - minimal, calming
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(button => {
+            button.style.background = 'rgba(255, 255, 255, 0.9)';
+            button.style.color = '#1e293b';
+            button.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+            button.style.backdropFilter = 'blur(10px)';
+            button.style.borderRadius = '8px';
+            button.style.transition = 'all 0.3s ease';
+            button.style.fontWeight = '400';
+            button.style.textShadow = 'none';
+            button.style.boxShadow = 'none';
         });
-        // Show daily focus goal
+
+        // Zen primary buttons - subtle green
+        const primaryButtons = document.querySelectorAll('#start-timer, #pause-timer, #stop-timer');
+        primaryButtons.forEach(button => {
+            button.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.fontWeight = '500';
+        });
+
+        // Zen session type buttons - muted colors
+        const sessionButtons = document.querySelectorAll('#quick-focus, #deep-work, #marathon, #custom-timer');
+        const sessionColors = {
+            'quick-focus': '#6b7280',
+            'deep-work': '#8b5cf6',
+            'marathon': '#f59e0b',
+            'custom-timer': '#64748b'
+        };
+        
+        sessionButtons.forEach(button => {
+            const buttonId = button.id;
+            const color = sessionColors[buttonId] || '#6b7280';
+            button.style.background = color;
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.fontWeight = '500';
+        });
+
+        // Zen cards - clean, minimal
+        const cards = document.querySelectorAll('#quote-card, #schedule-card, #progress-card');
+        cards.forEach(card => {
+            card.style.background = 'rgba(255, 255, 255, 0.9)';
+            card.style.backdropFilter = 'blur(20px)';
+            card.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+            card.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.05)';
+            card.style.borderRadius = '16px';
+            card.style.transition = 'all 0.3s ease';
+        });
+
+        // Zen header - minimal
+        const header = document.querySelector('header');
+        if (header) {
+            header.style.background = 'rgba(255, 255, 255, 0.9)';
+            header.style.backdropFilter = 'blur(20px)';
+            header.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
+            header.style.boxShadow = 'none';
+        }
+
+        // Zen mode toggle buttons
+        const modeButtons = document.querySelectorAll('#mode-toggle, #settings-btn, #sign-out-btn');
+        modeButtons.forEach(button => {
+            button.style.background = 'rgba(255, 255, 255, 0.8)';
+            button.style.color = '#1e293b';
+            button.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+            button.style.borderRadius = '8px';
+            button.style.transition = 'all 0.3s ease';
+        });
+
+        // Zen quote styling
+        const quoteText = document.getElementById('quote-text');
+        if (quoteText) {
+            quoteText.style.color = '#1e293b';
+            quoteText.style.fontStyle = 'italic';
+            quoteText.style.lineHeight = '1.6';
+            quoteText.style.fontSize = '1rem';
+        }
+
+        const quoteAuthor = document.getElementById('quote-author');
+        if (quoteAuthor) {
+            quoteAuthor.style.color = '#64748b';
+            quoteAuthor.style.fontWeight = '500';
+            quoteAuthor.style.fontSize = '0.875rem';
+        }
+
+        // Zen progress styling
+        const progressElements = document.querySelectorAll('#progress-card .space-y-4 > div');
+        progressElements.forEach(element => {
+            element.style.borderBottom = '1px solid rgba(255, 255, 255, 0.2)';
+            element.style.padding = '0.5rem 0';
+            element.style.transition = 'all 0.3s ease';
+        });
+
+        // Zen body background
+        document.body.style.background = 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)';
+        document.body.style.color = '#1e293b';
+        document.body.style.transition = 'all 0.3s ease';
+
+        // Show daily focus goal with Zen styling
         this.renderDailyFocusGoal();
+        
+        console.log('Zen mode enhanced - Pure, calming experience created');
+    }
+
+    resetAllModeStyles() {
+        // Reset all inline styles that might have been applied by other modes
+        const elementsToReset = [
+            '#timer-container',
+            '#timer-display',
+            '#progress-ring .progress-ring-circle',
+            'button',
+            '#quote-card',
+            '#schedule-card', 
+            '#progress-card',
+            'header',
+            '#mode-toggle',
+            '#settings-btn',
+            '#sign-out-btn',
+            '#quote-text',
+            '#quote-author',
+            '#progress-card .space-y-4 > div'
+        ];
+
+        elementsToReset.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                element.removeAttribute('style');
+            });
+        });
+
+        // Reset body styles
+        document.body.removeAttribute('style');
+        
+        console.log('All mode styles reset');
     }
 
     enhanceAchievementMode() {
@@ -1248,8 +1965,26 @@ class FocusFlow {
         const modes = ['zen', 'achievement', 'hybrid'];
         const currentIndex = modes.indexOf(this.currentMode);
         const nextIndex = (currentIndex + 1) % modes.length;
-        console.log('Toggling from', this.currentMode, 'to', modes[nextIndex]);
-        this.setMode(modes[nextIndex]);
+        const nextMode = modes[nextIndex];
+        
+        console.log('Toggling from', this.currentMode, 'to', nextMode);
+        
+        // Update the mode toggle button icon to reflect the next mode
+        const modeToggleBtn = document.getElementById('mode-toggle');
+        if (modeToggleBtn) {
+            const icon = modeToggleBtn.querySelector('i');
+            if (icon) {
+                const icons = {
+                    'zen': 'moon',
+                    'achievement': 'zap',
+                    'hybrid': 'sun'
+                };
+                icon.setAttribute('data-lucide', icons[nextMode]);
+                lucide.createIcons(); // Recreate icons
+            }
+        }
+        
+        this.setMode(nextMode);
     }
 
     setTimer(seconds) {
@@ -1726,6 +2461,18 @@ class FocusFlow {
         // Save locally first for immediate access
         localStorage.setItem('focusflow_progress', JSON.stringify(this.progress));
         
+        // Save daily progress for analytics
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const dailyProgress = {
+            totalMinutes: this.progress.todayMinutes || 0,
+            sessions: this.progress.totalSessions || 0,
+            completedSessions: this.progress.completedSessions || 0,
+            longestSession: this.progress.longestSession || 0,
+            date: todayStr
+        };
+        localStorage.setItem(`focusflow_${todayStr}`, JSON.stringify(dailyProgress));
+        
         // Sync to cloud if authenticated
         if (focusFlowAuth.isUserAuthenticated()) {
             try {
@@ -1736,6 +2483,11 @@ class FocusFlow {
                 // Progress is still saved locally
             }
         }
+        
+        // Update analytics
+        this.updateStatistics();
+        this.updateGoalProgress();
+        this.generateStreaksCalendar();
     }
 
     calculateStreak() {
@@ -1762,6 +2514,9 @@ class FocusFlow {
 
     showSettings() {
         document.getElementById('settings-modal').classList.remove('hidden');
+        
+        // Add distraction settings to the modal
+        this.addDistractionSettingsToUI();
     }
 
     hideSettings() {
@@ -1784,6 +2539,19 @@ class FocusFlow {
         // Update mode-specific styling
         const app = document.getElementById('app');
         app.className = `min-h-screen ${this.currentMode}-mode`;
+        
+        // Update dark mode icon
+        const modeToggleBtn = document.getElementById('mode-toggle');
+        if (modeToggleBtn) {
+            const isDark = document.body.classList.contains('dark-theme');
+            const icon = modeToggleBtn.querySelector('i');
+            if (icon) {
+                icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+                if (window.lucide) {
+                    lucide.createIcons();
+                }
+            }
+        }
     }
 
     renderDailyFocusGoal() {
@@ -1801,9 +2569,1839 @@ class FocusFlow {
         let minutes = 25;
         if (this.userPreferences.sessionLength === '90_min') minutes = 90;
         else if (this.userPreferences.sessionLength === '3_plus_hour') minutes = 180;
-        goal.innerHTML = `<span class='font-semibold'>Today’s Focus Goal:</span> ${minutes} minutes`;
+        goal.innerHTML = `<span class='font-semibold'>Today's Focus Goal:</span> ${minutes} minutes`;
+    }
+
+    // Smart Scheduling Methods
+    initializeScheduling() {
+        this.loadSchedule();
+        this.requestNotificationPermission();
+        this.setupScheduleDisplay();
+        this.bindScheduleEvents();
+        this.startScheduleMonitoring();
+    }
+
+    loadSchedule() {
+        const savedSchedule = localStorage.getItem('focusflow_schedule');
+        if (savedSchedule) {
+            this.schedule = { ...this.schedule, ...JSON.parse(savedSchedule) };
+        }
+        this.updateScheduleDisplay();
+    }
+
+    saveSchedule() {
+        localStorage.setItem('focusflow_schedule', JSON.stringify(this.schedule));
+    }
+
+    setupScheduleDisplay() {
+        this.updateScheduleDisplay();
+    }
+
+    updateScheduleDisplay() {
+        const wakeUpDisplay = document.getElementById('wake-up-display');
+        const focusWindowDisplay = document.getElementById('focus-window-display');
+        const bedtimeDisplay = document.getElementById('bedtime-display');
+
+        if (wakeUpDisplay) wakeUpDisplay.textContent = this.schedule.wakeUpTime;
+        if (focusWindowDisplay) focusWindowDisplay.textContent = `${this.schedule.focusWindowStart}-${this.schedule.focusWindowEnd}`;
+        if (bedtimeDisplay) bedtimeDisplay.textContent = this.schedule.bedtime;
+    }
+
+    bindScheduleEvents() {
+        // Edit schedule button
+        document.getElementById('edit-schedule-btn')?.addEventListener('click', () => {
+            this.showSettings();
+        });
+
+        // Schedule settings in settings modal
+        document.getElementById('wake-up-time')?.addEventListener('change', (e) => {
+            this.schedule.wakeUpTime = e.target.value;
+            this.saveSchedule();
+            this.updateScheduleDisplay();
+        });
+
+        document.getElementById('bedtime')?.addEventListener('change', (e) => {
+            this.schedule.bedtime = e.target.value;
+            this.saveSchedule();
+            this.updateScheduleDisplay();
+        });
+
+        document.getElementById('focus-window-start')?.addEventListener('change', (e) => {
+            this.schedule.focusWindowStart = e.target.value;
+            this.saveSchedule();
+            this.updateScheduleDisplay();
+        });
+
+        document.getElementById('focus-window-end')?.addEventListener('change', (e) => {
+            this.schedule.focusWindowEnd = e.target.value;
+            this.saveSchedule();
+            this.updateScheduleDisplay();
+        });
+
+        // Notification settings
+        document.getElementById('session-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.sessionReminders = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('break-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.breakReminders = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('daily-motivation')?.addEventListener('change', (e) => {
+            this.schedule.notifications.dailyMotivation = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('wake-up-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.wakeUpReminders = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('wind-down-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.windDownReminders = e.target.checked;
+            this.saveSchedule();
+        });
+
+        document.getElementById('focus-window-reminders')?.addEventListener('change', (e) => {
+            this.schedule.notifications.focusWindowReminders = e.target.checked;
+            this.saveSchedule();
+        });
+    }
+
+    async requestNotificationPermission() {
+        if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            this.notificationPermission = permission === 'granted';
+            console.log('Notification permission:', permission);
+        }
+    }
+
+    startScheduleMonitoring() {
+        // Check schedule every minute
+        setInterval(() => {
+            this.checkSchedule();
+        }, 60000);
+
+        // Initial check
+        this.checkSchedule();
+    }
+
+    checkSchedule() {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0, 5);
+        const currentHour = now.getHours();
+
+        // Wake-up reminder
+        if (this.schedule.notifications.wakeUpReminders && 
+            currentTime === this.schedule.wakeUpTime) {
+            this.showNotification('Good Morning! 🌅', 'Time to start your day with focus and purpose.');
+        }
+
+        // Focus window reminder
+        if (this.schedule.notifications.focusWindowReminders && 
+            currentTime === this.schedule.focusWindowStart) {
+            this.showNotification('Focus Window Open 🎯', 'Your optimal focus time has begun. Ready to dive deep?');
+        }
+
+        // Wind-down reminder
+        if (this.schedule.notifications.windDownReminders && 
+            currentTime === this.schedule.bedtime) {
+            this.showNotification('Time to Wind Down 🌙', 'Great work today! Time to relax and prepare for tomorrow.');
+        }
+
+        // Daily motivation (once per day at 9 AM)
+        if (this.schedule.notifications.dailyMotivation && 
+            currentTime === '09:00' && 
+            !localStorage.getItem('focusflow_daily_motivation_' + now.toDateString())) {
+            this.showDailyMotivation();
+            localStorage.setItem('focusflow_daily_motivation_' + now.toDateString(), 'true');
+        }
+    }
+
+    showNotification(title, message) {
+        if (this.notificationPermission) {
+            new Notification(title, {
+                body: message,
+                icon: '/manifest.json',
+                badge: '/manifest.json',
+                tag: 'focusflow-notification'
+            });
+        } else {
+            // Fallback to browser alert
+            this.showBrowserNotification(title, message);
+        }
+    }
+
+    showBrowserNotification(title, message) {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 p-4 bg-white rounded-lg shadow-lg border-l-4 border-green-500 z-50 max-w-sm fade-in';
+        notification.innerHTML = `
+            <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0">
+                    <i data-lucide="bell" class="w-5 h-5 text-green-500"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-900">${title}</h4>
+                    <p class="text-sm text-gray-600 mt-1">${message}</p>
+                </div>
+                <button class="flex-shrink-0 text-gray-400 hover:text-gray-600" onclick="this.parentElement.parentElement.remove()">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        `;
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+
+        // Update icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    showDailyMotivation() {
+        const quote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+        this.showNotification('Daily Motivation 💪', `"${quote.text}" - ${quote.author}`);
+    }
+
+    isInFocusWindow() {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0, 5);
+        return currentTime >= this.schedule.focusWindowStart && currentTime <= this.schedule.focusWindowEnd;
+    }
+
+    getNextFocusSession() {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0, 5);
+        
+        if (currentTime < this.schedule.focusWindowStart) {
+            return `Next focus session starts at ${this.schedule.focusWindowStart}`;
+        } else if (currentTime > this.schedule.focusWindowEnd) {
+            return 'Focus window closed for today';
+        } else {
+            return 'You\'re in your focus window!';
+        }
+    }
+
+    // Analytics and Progress Tracking
+    initializeAnalytics() {
+        this.bindAnalyticsEvents();
+        this.generateEnhancedStreaksCalendar();
+        this.renderFocusChart('week');
+        this.updateStatistics();
+        this.updateGoalProgress();
+        
+        // Initialize enhanced analytics features
+        this.initializeEnhancedAnalytics();
+        
+        // Initialize distraction management
+        this.initializeDistractionManagement();
+    }
+
+    initializeEnhancedAnalytics() {
+        // Add session count to chart stats if element exists
+        const chartStats = document.querySelector('#charts-view .flex.justify-between');
+        if (chartStats && !document.getElementById('chart-total-sessions')) {
+            const sessionElement = document.createElement('span');
+            sessionElement.id = 'chart-total-sessions';
+            sessionElement.className = 'text-xs text-gray-500';
+            sessionElement.textContent = '0 sessions';
+            chartStats.appendChild(sessionElement);
+        }
+        
+        // Initialize insights data
+        this.updateInsightsData();
+        
+        // Add enhanced calendar features
+        this.enhanceCalendarFeatures();
+    }
+
+    enhanceCalendarFeatures() {
+        // Add legend to calendar
+        const calendarContainer = document.getElementById('streaks-view');
+        if (calendarContainer && !document.getElementById('calendar-legend')) {
+            const legend = document.createElement('div');
+            legend.id = 'calendar-legend';
+            legend.className = 'flex justify-center space-x-4 mt-3 text-xs';
+            legend.innerHTML = `
+                <div class="flex items-center space-x-1">
+                    <div class="w-3 h-3 bg-green-500 rounded"></div>
+                    <span>Goal achieved</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <div class="w-3 h-3 bg-yellow-500 rounded"></div>
+                    <span>Partial progress</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <div class="w-3 h-3 bg-red-500 rounded"></div>
+                    <span>No activity</span>
+                </div>
+            `;
+            calendarContainer.appendChild(legend);
+        }
+        
+        // Generate sample data for demonstration
+        this.generateSampleData();
+    }
+
+    generateSampleData() {
+        // Only generate sample data if no real data exists
+        const today = new Date();
+        const hasRealData = this.getFocusDataForDate(today);
+        
+        if (!hasRealData) {
+            // Generate sample data for the last 30 days
+            for (let i = 0; i < 30; i++) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const dateStr = date.toISOString().split('T')[0];
+                
+                // Skip weekends occasionally and add some variation
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const random = Math.random();
+                
+                if (!isWeekend || random > 0.3) { // 70% chance of weekend activity
+                    const minutes = Math.floor(Math.random() * 480) + 120; // 2-10 hours
+                    const sessions = Math.floor(Math.random() * 5) + 1; // 1-5 sessions
+                    const completedSessions = Math.floor(sessions * 0.8); // 80% completion rate
+                    const longestSession = Math.floor(minutes / sessions) + Math.floor(Math.random() * 30);
+                    
+                    const sampleData = {
+                        totalMinutes: minutes,
+                        sessions: sessions,
+                        completedSessions: completedSessions,
+                        longestSession: longestSession,
+                        date: dateStr
+                    };
+                    
+                    localStorage.setItem(`focusflow_${dateStr}`, JSON.stringify(sampleData));
+                }
+            }
+        }
+    }
+
+    bindAnalyticsEvents() {
+        // Analytics tabs
+        document.getElementById('tab-streaks')?.addEventListener('click', () => {
+            this.switchAnalyticsTab('streaks');
+        });
+        
+        document.getElementById('tab-charts')?.addEventListener('click', () => {
+            this.switchAnalyticsTab('charts');
+        });
+        
+        document.getElementById('tab-stats')?.addEventListener('click', () => {
+            this.switchAnalyticsTab('stats');
+        });
+        
+        document.getElementById('tab-insights')?.addEventListener('click', () => {
+            this.switchAnalyticsTab('insights');
+            this.updateInsightsData();
+        });
+
+        // Chart period buttons
+        document.getElementById('chart-week')?.addEventListener('click', () => {
+            this.switchChartPeriod('week');
+        });
+        
+        document.getElementById('chart-month')?.addEventListener('click', () => {
+            this.switchChartPeriod('month');
+        });
+
+        // Export data button
+        document.getElementById('export-data')?.addEventListener('click', () => {
+            this.exportProgressData();
+        });
+    }
+
+    switchAnalyticsTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll('.analytics-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+
+        // Update content
+        document.querySelectorAll('.analytics-content').forEach(content => {
+            content.classList.remove('active');
+            content.classList.add('hidden');
+        });
+        document.getElementById(`${tabName}-view`).classList.remove('hidden');
+        document.getElementById(`${tabName}-view`).classList.add('active');
+    }
+
+    switchChartPeriod(period) {
+        // Update period buttons
+        document.querySelectorAll('.chart-period').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.getElementById(`chart-${period}`).classList.add('active');
+
+        // Re-render chart
+        this.renderFocusChart(period);
+    }
+
+    generateStreaksCalendar() {
+        const calendar = document.getElementById('streaks-calendar');
+        if (!calendar) return;
+
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        const startDate = new Date(firstDay);
+        startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+        calendar.innerHTML = '';
+
+        // Generate calendar days
+        for (let i = 0; i < 42; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = date.getDate();
+
+            // Check if it's today
+            if (date.toDateString() === today.toDateString()) {
+                dayElement.classList.add('today');
+            }
+            // Check if it's in the current month
+            else if (date.getMonth() !== currentMonth) {
+                dayElement.classList.add('empty');
+            }
+            // Check if there was focus activity on this day
+            else {
+                const focusData = this.getFocusDataForDate(date);
+                if (focusData && focusData.totalMinutes > 0) {
+                    if (focusData.totalMinutes >= 240) { // 4 hours
+                        dayElement.classList.add('completed');
+                    } else {
+                        dayElement.classList.add('partial');
+                    }
+                } else {
+                    dayElement.classList.add('missed');
+                }
+            }
+
+            // Add click event for details
+            dayElement.addEventListener('click', () => {
+                this.showDayDetails(date);
+            });
+
+            calendar.appendChild(dayElement);
+        }
+
+        this.updateStreakCounts();
+    }
+
+    getFocusDataForDate(date) {
+        const dateStr = date.toISOString().split('T')[0];
+        const savedData = localStorage.getItem(`focusflow_${dateStr}`);
+        return savedData ? JSON.parse(savedData) : null;
+    }
+
+    showDayDetails(date) {
+        const focusData = this.getFocusDataForDate(date);
+        const dateStr = date.toLocaleDateString();
+        
+        let message = `Focus activity for ${dateStr}\n\n`;
+        if (focusData) {
+            const hours = Math.floor(focusData.totalMinutes / 60);
+            const minutes = focusData.totalMinutes % 60;
+            message += `Total focus time: ${hours}h ${minutes}m\n`;
+            message += `Sessions completed: ${focusData.sessions || 0}\n`;
+            message += `Average session length: ${Math.round(focusData.totalMinutes / (focusData.sessions || 1))}m`;
+        } else {
+            message += 'No focus activity recorded for this day.';
+        }
+        
+        alert(message);
+    }
+
+    updateStreakCounts() {
+        const currentStreak = this.calculateCurrentStreak();
+        const bestStreak = this.calculateBestStreak();
+        
+        document.getElementById('current-streak-days').textContent = currentStreak;
+        document.getElementById('best-streak-days').textContent = bestStreak;
+    }
+
+    calculateCurrentStreak() {
+        const today = new Date();
+        let streak = 0;
+        let currentDate = new Date(today);
+        
+        while (true) {
+            const focusData = this.getFocusDataForDate(currentDate);
+            if (focusData && focusData.totalMinutes >= 240) { // 4 hours minimum
+                streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+
+    calculateBestStreak() {
+        // Enhanced best streak calculation
+        const today = new Date();
+        let bestStreak = 0;
+        let currentStreak = 0;
+        
+        // Check last 365 days for the best streak
+        for (let i = 365; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData && focusData.totalMinutes >= 240) { // 4 hours minimum
+                currentStreak++;
+                bestStreak = Math.max(bestStreak, currentStreak);
+            } else {
+                currentStreak = 0;
+            }
+        }
+        
+        return bestStreak;
+    }
+
+    renderFocusChart(period) {
+        const chartContainer = document.getElementById('focus-chart');
+        if (!chartContainer) return;
+
+        chartContainer.innerHTML = '';
+        
+        const data = this.getChartData(period);
+        const maxValue = Math.max(...data.map(d => d.value), 1);
+        
+        data.forEach((item, index) => {
+            const bar = document.createElement('div');
+            bar.className = 'chart-bar';
+            bar.style.height = `${(item.value / maxValue) * 100}%`;
+            bar.style.flex = '1';
+            bar.style.position = 'relative';
+            
+            // Add value label
+            const valueLabel = document.createElement('div');
+            valueLabel.className = 'chart-bar-value';
+            valueLabel.textContent = `${item.value}h`;
+            valueLabel.style.position = 'absolute';
+            valueLabel.style.top = '-20px';
+            valueLabel.style.left = '50%';
+            valueLabel.style.transform = 'translateX(-50%)';
+            valueLabel.style.fontSize = '10px';
+            valueLabel.style.fontWeight = '600';
+            bar.appendChild(valueLabel);
+            
+            // Add day label
+            const dayLabel = document.createElement('div');
+            dayLabel.className = 'chart-bar-label';
+            dayLabel.textContent = item.label;
+            dayLabel.style.position = 'absolute';
+            dayLabel.style.bottom = '-20px';
+            dayLabel.style.left = '50%';
+            dayLabel.style.transform = 'translateX(-50%)';
+            dayLabel.style.fontSize = '10px';
+            dayLabel.style.fontWeight = '500';
+            bar.appendChild(dayLabel);
+            
+            // Add tooltip
+            bar.title = `${item.label}: ${item.value}h (${item.sessions || 0} sessions)`;
+            
+            chartContainer.appendChild(bar);
+        });
+
+        this.updateChartStats(data);
+    }
+
+    getChartData(period) {
+        const data = [];
+        const today = new Date();
+        
+        if (period === 'week') {
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const focusData = this.getFocusDataForDate(date);
+                const hours = focusData ? Math.round(focusData.totalMinutes / 60) : 0;
+                
+                data.push({
+                    label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                    value: hours,
+                    sessions: focusData ? focusData.sessions : 0,
+                    date: date
+                });
+            }
+        } else { // month
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(today.getDate() - i);
+                const focusData = this.getFocusDataForDate(date);
+                const hours = focusData ? Math.round(focusData.totalMinutes / 60) : 0;
+                
+                data.push({
+                    label: date.getDate().toString(),
+                    value: hours,
+                    sessions: focusData ? focusData.sessions : 0,
+                    date: date
+                });
+            }
+        }
+        
+        return data;
+    }
+
+    updateChartStats(data) {
+        const total = data.reduce((sum, item) => sum + item.value, 0);
+        const average = Math.round(total / data.length);
+        const totalSessions = data.reduce((sum, item) => sum + (item.sessions || 0), 0);
+        
+        document.getElementById('chart-total-hours').textContent = `${total}h`;
+        document.getElementById('chart-avg-hours').textContent = `${average}h`;
+        
+        // Add session count if element exists
+        const sessionElement = document.getElementById('chart-total-sessions');
+        if (sessionElement) {
+            sessionElement.textContent = `${totalSessions} sessions`;
+        }
+    }
+
+    updateStatistics() {
+        const stats = this.calculateStatistics();
+        
+        document.getElementById('total-focus-hours').textContent = stats.totalHours;
+        document.getElementById('total-sessions').textContent = stats.totalSessions;
+        document.getElementById('avg-session-length').textContent = `${stats.avgSessionLength}m`;
+        document.getElementById('completion-rate').textContent = `${stats.completionRate}%`;
+        
+        // Personal bests
+        document.getElementById('longest-session').textContent = `${stats.longestSession}m`;
+        document.getElementById('most-sessions-day').textContent = stats.mostSessionsDay;
+        document.getElementById('best-streak').textContent = `${stats.bestStreak} days`;
+        document.getElementById('most-hours-day').textContent = `${stats.mostHoursDay}h`;
+        
+        // Update goal achievement rate if element exists
+        const goalRateElement = document.getElementById('goal-achievement-rate');
+        if (goalRateElement) {
+            goalRateElement.textContent = `${stats.goalAchievementRate}%`;
+        }
+        
+        // Update streak counts
+        this.updateStreakCounts();
+    }
+
+    calculateStatistics() {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        let totalMinutes = 0;
+        let totalSessions = 0;
+        let longestSession = 0;
+        let mostSessionsDay = 0;
+        let mostHoursDay = 0;
+        let completedSessions = 0;
+        let totalSessionsAttempted = 0;
+        let dailyGoals = 0;
+        let goalsAchieved = 0;
+        
+        // Calculate stats from last 30 days
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData) {
+                totalMinutes += focusData.totalMinutes || 0;
+                totalSessions += focusData.sessions || 0;
+                longestSession = Math.max(longestSession, focusData.longestSession || 0);
+                mostSessionsDay = Math.max(mostSessionsDay, focusData.sessions || 0);
+                mostHoursDay = Math.max(mostHoursDay, Math.round((focusData.totalMinutes || 0) / 60));
+                completedSessions += focusData.completedSessions || 0;
+                totalSessionsAttempted += focusData.sessions || 0;
+                
+                // Track daily goal achievement
+                dailyGoals++;
+                if ((focusData.totalMinutes || 0) >= 240) { // 4 hours goal
+                    goalsAchieved++;
+                }
+            }
+        }
+        
+        return {
+            totalHours: Math.round(totalMinutes / 60),
+            totalSessions: totalSessions,
+            avgSessionLength: totalSessions > 0 ? Math.round(totalMinutes / totalSessions) : 0,
+            completionRate: totalSessionsAttempted > 0 ? Math.round((completedSessions / totalSessionsAttempted) * 100) : 0,
+            longestSession: longestSession,
+            mostSessionsDay: mostSessionsDay,
+            bestStreak: this.calculateBestStreak(),
+            mostHoursDay: mostHoursDay,
+            goalAchievementRate: dailyGoals > 0 ? Math.round((goalsAchieved / dailyGoals) * 100) : 0
+        };
+    }
+
+    updateGoalProgress() {
+        const today = new Date();
+        const focusData = this.getFocusDataForDate(today);
+        const dailyGoal = 240; // 4 hours in minutes
+        const currentProgress = focusData ? focusData.totalMinutes : 0;
+        const progressPercentage = Math.min((currentProgress / dailyGoal) * 100, 100);
+        
+        document.getElementById('goal-progress-text').textContent = 
+            `${Math.round(currentProgress / 60)}/${Math.round(dailyGoal / 60)}h`;
+        document.getElementById('goal-progress-bar').style.width = `${progressPercentage}%`;
+        
+        // Update progress color based on completion
+        const progressBar = document.getElementById('goal-progress-bar');
+        if (progressPercentage >= 100) {
+            progressBar.style.backgroundColor = '#10B981'; // Green for completed
+        } else if (progressPercentage >= 75) {
+            progressBar.style.backgroundColor = '#F59E0B'; // Yellow for close
+        } else {
+            progressBar.style.backgroundColor = '#EF4444'; // Red for far from goal
+        }
+    }
+
+    exportProgressData() {
+        const data = this.generateExportData();
+        
+        // Create multiple export formats
+        const formats = [
+            { name: 'JSON', data: JSON.stringify(data, null, 2), type: 'application/json', ext: 'json' },
+            { name: 'CSV', data: this.convertToCSV(data), type: 'text/csv', ext: 'csv' },
+            { name: 'Summary', data: this.generateSummaryReport(data), type: 'text/plain', ext: 'txt' }
+        ];
+        
+        // Show export options modal
+        this.showExportOptionsModal(formats);
+    }
+
+    showExportOptionsModal(formats) {
+        // Create modal for export options
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">Export Progress Data</h3>
+                    <button class="text-gray-400 hover:text-gray-600" onclick="this.closest('.fixed').remove()">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <p class="text-gray-600 mb-4">Choose your preferred export format:</p>
+                <div class="space-y-3">
+                    ${formats.map(format => `
+                        <button class="w-full p-3 text-left border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors" 
+                                onclick="this.downloadData('${format.name}', '${format.data}', '${format.type}', '${format.ext}')">
+                            <div class="font-medium text-gray-800">${format.name}</div>
+                            <div class="text-sm text-gray-500">Download as .${format.ext} file</div>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add download function to window
+        window.downloadData = (name, data, type, ext) => {
+            const blob = new Blob([data], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `focusflow-progress-${new Date().toISOString().split('T')[0]}.${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Close modal and show success message
+            modal.remove();
+            this.showNotification('Data Exported', `Your progress data has been exported as ${name} format.`);
+        };
+    }
+
+    convertToCSV(data) {
+        const headers = ['Date', 'Total Minutes', 'Sessions', 'Completed Sessions', 'Longest Session', 'Goal Achieved'];
+        const rows = [];
+        
+        // Add daily data
+        Object.keys(data.dailyData).forEach(date => {
+            const dayData = data.dailyData[date];
+            rows.push([
+                date,
+                dayData.totalMinutes || 0,
+                dayData.sessions || 0,
+                dayData.completedSessions || 0,
+                dayData.longestSession || 0,
+                (dayData.totalMinutes || 0) >= 240 ? 'Yes' : 'No'
+            ]);
+        });
+        
+        return [headers, ...rows].map(row => row.join(',')).join('\n');
+    }
+
+    generateSummaryReport(data) {
+        const stats = data.statistics;
+        const totalDays = Object.keys(data.dailyData).length;
+        const activeDays = Object.values(data.dailyData).filter(day => day.totalMinutes > 0).length;
+        
+        return `FocusFlow Progress Summary
+Generated: ${new Date().toLocaleDateString()}
+
+OVERALL STATISTICS:
+- Total Focus Hours: ${stats.totalHours}h
+- Total Sessions: ${stats.totalSessions}
+- Average Session Length: ${stats.avgSessionLength}m
+- Completion Rate: ${stats.completionRate}%
+- Best Streak: ${stats.bestStreak} days
+
+PERSONAL BESTS:
+- Longest Session: ${stats.longestSession}m
+- Most Sessions in a Day: ${stats.mostSessionsDay}
+- Most Hours in a Day: ${stats.mostHoursDay}h
+
+ACTIVITY SUMMARY:
+- Total Days Tracked: ${totalDays}
+- Active Days: ${activeDays}
+- Activity Rate: ${Math.round((activeDays / totalDays) * 100)}%
+
+GOAL ACHIEVEMENT:
+- Daily Goal: 4 hours
+- Goal Achievement Rate: ${stats.goalAchievementRate}%
+
+This report was generated by FocusFlow - Your Personal Focus Coach.`;
+    }
+
+    generateExportData() {
+        const today = new Date();
+        const exportData = {
+            exportDate: today.toISOString(),
+            userPreferences: this.userPreferences,
+            statistics: this.calculateStatistics(),
+            dailyData: {},
+            streaks: {
+                current: this.calculateCurrentStreak(),
+                best: this.calculateBestStreak()
+            },
+            goals: {
+                dailyGoal: 240, // 4 hours in minutes
+                weeklyGoal: 1680, // 28 hours in minutes
+                monthlyGoal: 7200 // 120 hours in minutes
+            }
+        };
+        
+        // Export last 90 days of data
+        for (let i = 0; i < 90; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData) {
+                exportData.dailyData[dateStr] = {
+                    ...focusData,
+                    goalAchieved: (focusData.totalMinutes || 0) >= 240,
+                    weekNumber: this.getWeekNumber(date),
+                    monthNumber: date.getMonth() + 1
+                };
+            }
+        }
+        
+        return exportData;
+    }
+
+    getWeekNumber(date) {
+        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+        const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+    }
+
+    // Enhanced streak tracking with detailed analytics
+    calculateDetailedStreaks() {
+        const today = new Date();
+        let currentStreak = 0;
+        let bestStreak = 0;
+        let currentStreakStart = null;
+        let bestStreakStart = null;
+        let bestStreakEnd = null;
+        
+        // Check last 365 days for detailed streak analysis
+        for (let i = 365; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData && focusData.totalMinutes >= 240) {
+                currentStreak++;
+                if (currentStreak === 1) {
+                    currentStreakStart = new Date(date);
+                }
+                
+                if (currentStreak > bestStreak) {
+                    bestStreak = currentStreak;
+                    bestStreakStart = new Date(currentStreakStart);
+                    bestStreakEnd = new Date(date);
+                }
+            } else {
+                currentStreak = 0;
+                currentStreakStart = null;
+            }
+        }
+        
+        return {
+            current: currentStreak,
+            best: bestStreak,
+            currentStart: currentStreakStart,
+            bestStart: bestStreakStart,
+            bestEnd: bestStreakEnd
+        };
+    }
+
+    // Enhanced calendar with more detailed information
+    generateEnhancedStreaksCalendar() {
+        const calendar = document.getElementById('streaks-calendar');
+        if (!calendar) return;
+
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        const startDate = new Date(firstDay);
+        startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+        calendar.innerHTML = '';
+
+        // Generate calendar days with enhanced information
+        for (let i = 0; i < 42; i++) {
+            const date = new Date(startDate);
+            date.setDate(startDate.getDate() + i);
+            
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = date.getDate();
+
+            // Check if it's today
+            if (date.toDateString() === today.toDateString()) {
+                dayElement.classList.add('today');
+            }
+            // Check if it's in the current month
+            else if (date.getMonth() !== currentMonth) {
+                dayElement.classList.add('empty');
+            }
+            // Check if there was focus activity on this day
+            else {
+                const focusData = this.getFocusDataForDate(date);
+                if (focusData && focusData.totalMinutes > 0) {
+                    if (focusData.totalMinutes >= 240) { // 4 hours
+                        dayElement.classList.add('completed');
+                        dayElement.title = `${focusData.totalMinutes} minutes (${focusData.sessions} sessions) - Goal achieved!`;
+                    } else {
+                        dayElement.classList.add('partial');
+                        dayElement.title = `${focusData.totalMinutes} minutes (${focusData.sessions} sessions) - Partial progress`;
+                    }
+                } else {
+                    dayElement.classList.add('missed');
+                    dayElement.title = 'No focus activity recorded';
+                }
+            }
+
+            // Add click event for details
+            dayElement.addEventListener('click', () => {
+                this.showEnhancedDayDetails(date);
+            });
+
+            calendar.appendChild(dayElement);
+        }
+
+        this.updateStreakCounts();
+    }
+
+    showEnhancedDayDetails(date) {
+        const focusData = this.getFocusDataForDate(date);
+        const dateStr = date.toLocaleDateString();
+        
+        let message = `Focus activity for ${dateStr}\n\n`;
+        if (focusData) {
+            const hours = Math.floor(focusData.totalMinutes / 60);
+            const minutes = focusData.totalMinutes % 60;
+            const goalAchieved = focusData.totalMinutes >= 240;
+            
+            message += `Total focus time: ${hours}h ${minutes}m\n`;
+            message += `Sessions completed: ${focusData.sessions || 0}\n`;
+            message += `Average session length: ${Math.round(focusData.totalMinutes / (focusData.sessions || 1))}m\n`;
+            message += `Goal achievement: ${goalAchieved ? '✅ Achieved' : '❌ Not met'}\n`;
+            
+            if (focusData.longestSession) {
+                message += `Longest session: ${focusData.longestSession}m\n`;
+            }
+            
+            if (focusData.completedSessions !== undefined) {
+                message += `Completion rate: ${Math.round((focusData.completedSessions / focusData.sessions) * 100)}%`;
+            }
+        } else {
+            message += 'No focus activity recorded for this day.';
+        }
+        
+        alert(message);
+    }
+
+    updateInsightsData() {
+        const today = new Date();
+        const stats = this.calculateStatistics();
+        
+        // Update goal achievement rate
+        const goalRateElement = document.getElementById('goal-achievement-rate');
+        if (goalRateElement) {
+            goalRateElement.textContent = `${stats.goalAchievementRate}%`;
+        }
+        
+        // Calculate activity rate (days with any focus activity in last 30 days)
+        const activityRate = this.calculateActivityRate();
+        const activityRateElement = document.getElementById('activity-rate');
+        if (activityRateElement) {
+            activityRateElement.textContent = `${activityRate}%`;
+        }
+        
+        // Update weekly progress
+        this.updateWeeklyProgress();
+        
+        // Update productivity patterns
+        this.updateProductivityPatterns();
+    }
+
+    calculateActivityRate() {
+        const today = new Date();
+        let activeDays = 0;
+        
+        for (let i = 0; i < 30; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData && focusData.totalMinutes > 0) {
+                activeDays++;
+            }
+        }
+        
+        return Math.round((activeDays / 30) * 100);
+    }
+
+    updateWeeklyProgress() {
+        const today = new Date();
+        const thisWeekStart = new Date(today);
+        thisWeekStart.setDate(today.getDate() - today.getDay());
+        const lastWeekStart = new Date(thisWeekStart);
+        lastWeekStart.setDate(thisWeekStart.getDate() - 7);
+        
+        let thisWeekHours = 0;
+        let lastWeekHours = 0;
+        
+        // Calculate this week's hours
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(thisWeekStart);
+            date.setDate(thisWeekStart.getDate() + i);
+            const focusData = this.getFocusDataForDate(date);
+            if (focusData) {
+                thisWeekHours += Math.round(focusData.totalMinutes / 60);
+            }
+        }
+        
+        // Calculate last week's hours
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(lastWeekStart);
+            date.setDate(lastWeekStart.getDate() + i);
+            const focusData = this.getFocusDataForDate(date);
+            if (focusData) {
+                lastWeekHours += Math.round(focusData.totalMinutes / 60);
+            }
+        }
+        
+        // Update UI
+        const thisWeekElement = document.getElementById('this-week-hours');
+        const lastWeekElement = document.getElementById('last-week-hours');
+        
+        if (thisWeekElement) thisWeekElement.textContent = `${thisWeekHours}h`;
+        if (lastWeekElement) lastWeekElement.textContent = `${lastWeekHours}h`;
+    }
+
+    updateProductivityPatterns() {
+        const today = new Date();
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayTotals = new Array(7).fill(0);
+        const dayCounts = new Array(7).fill(0);
+        
+        // Calculate productivity by day of week for last 4 weeks
+        for (let i = 0; i < 28; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const focusData = this.getFocusDataForDate(date);
+            
+            if (focusData && focusData.totalMinutes > 0) {
+                const dayOfWeek = date.getDay();
+                dayTotals[dayOfWeek] += focusData.totalMinutes;
+                dayCounts[dayOfWeek]++;
+            }
+        }
+        
+        // Find best productivity day
+        let bestDayIndex = 0;
+        let bestDayAverage = 0;
+        
+        for (let i = 0; i < 7; i++) {
+            if (dayCounts[i] > 0) {
+                const average = dayTotals[i] / dayCounts[i];
+                if (average > bestDayAverage) {
+                    bestDayAverage = average;
+                    bestDayIndex = i;
+                }
+            }
+        }
+        
+        // Calculate consistency score
+        const activeDays = dayCounts.filter(count => count > 0).length;
+        const consistencyScore = Math.round((activeDays / 7) * 100);
+        
+        // Update UI
+        const bestDayElement = document.getElementById('best-productivity-day');
+        const consistencyElement = document.getElementById('consistency-score');
+        
+        if (bestDayElement) {
+            bestDayElement.textContent = dayNames[bestDayIndex];
+        }
+        
+        if (consistencyElement) {
+            consistencyElement.textContent = `${consistencyScore}%`;
+        }
+        
+        // Peak hours calculation (simplified - could be enhanced with time-based data)
+        const peakHoursElement = document.getElementById('peak-productivity-hours');
+        if (peakHoursElement) {
+            peakHoursElement.textContent = '9AM-11AM'; // Placeholder - could be calculated from actual data
+        }
+    }
+
+    // Distraction Management System
+    initializeDistractionManagement() {
+        this.distractionData = {
+            lastActivity: Date.now(),
+            inactivityThreshold: 30000, // 30 seconds
+            distractionCount: 0,
+            mindfulPauseCount: 0,
+            alternativeActivities: [
+                { name: "Take 3 deep breaths", duration: "30s", type: "mindfulness" },
+                { name: "Stretch your arms", duration: "1m", type: "physical" },
+                { name: "Look out the window", duration: "1m", type: "visual" },
+                { name: "Drink some water", duration: "30s", type: "health" },
+                { name: "Stand up and walk", duration: "2m", type: "movement" },
+                { name: "Close your eyes briefly", duration: "30s", type: "rest" },
+                { name: "Check your posture", duration: "30s", type: "awareness" },
+                { name: "Think of one thing you're grateful for", duration: "1m", type: "mindfulness" }
+            ],
+            focusGoals: [
+                "Complete this session without interruption",
+                "Stay focused for the next 10 minutes",
+                "Achieve deep work state",
+                "Maintain concentration until break",
+                "Build your focus stamina"
+            ],
+            distractionTypes: [
+                "Social media",
+                "Email checking",
+                "Phone notifications",
+                "Daydreaming",
+                "Physical discomfort",
+                "Hunger/thirst",
+                "Noise",
+                "Other tasks",
+                "Boredom",
+                "Anxiety"
+            ]
+        };
+
+        this.loadDistractionSettings();
+        this.startDistractionMonitoring();
+        this.bindDistractionEvents();
+    }
+
+    loadDistractionSettings() {
+        const savedSettings = localStorage.getItem('focusflow_distraction_settings');
+        if (savedSettings) {
+            this.distractionData = { ...this.distractionData, ...JSON.parse(savedSettings) };
+        }
+    }
+
+    saveDistractionSettings() {
+        localStorage.setItem('focusflow_distraction_settings', JSON.stringify(this.distractionData));
+    }
+
+    startDistractionMonitoring() {
+        // Monitor user activity
+        this.distractionInterval = setInterval(() => {
+            this.checkForDistraction();
+        }, 10000); // Check every 10 seconds
+
+        // Track user interactions
+        this.trackUserActivity();
+    }
+
+    trackUserActivity() {
+        const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click'];
+        
+        activityEvents.forEach(event => {
+            document.addEventListener(event, () => {
+                this.distractionData.lastActivity = Date.now();
+            }, { passive: true });
+        });
+
+        // Track tab visibility
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.handleTabSwitch();
+            } else {
+                this.distractionData.lastActivity = Date.now();
+            }
+        });
+    }
+
+    checkForDistraction() {
+        if (!this.isRunning) return; // Only check during active sessions
+
+        const timeSinceLastActivity = Date.now() - this.distractionData.lastActivity;
+        
+        if (timeSinceLastActivity > this.distractionData.inactivityThreshold) {
+            this.showMindfulPauseModal();
+        }
+    }
+
+    handleTabSwitch() {
+        if (this.isRunning) {
+            this.distractionData.distractionCount++;
+            this.saveDistractionData();
+            
+            // Show gentle reminder when returning to tab
+            setTimeout(() => {
+                if (!document.hidden && this.isRunning) {
+                    this.showFocusReminder();
+                }
+            }, 1000);
+        }
+    }
+
+    showMindfulPauseModal() {
+        if (this.mindfulPauseShown) return; // Prevent multiple modals
+        
+        this.mindfulPauseShown = true;
+        this.distractionData.mindfulPauseCount++;
+        
+        const modal = document.createElement('div');
+        modal.id = 'mindful-pause-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+                <div class="text-4xl mb-4">🧘</div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Mindful Pause</h3>
+                <p class="text-gray-600 mb-6">It looks like you might be getting distracted. Take a moment to refocus.</p>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <h4 class="font-medium text-blue-800 mb-2">Focus Goal</h4>
+                        <p class="text-sm text-blue-600" id="current-focus-goal">${this.getRandomFocusGoal()}</p>
+                    </div>
+                    
+                    <div class="p-4 bg-green-50 rounded-lg">
+                        <h4 class="font-medium text-green-800 mb-2">Alternative Activity</h4>
+                        <p class="text-sm text-green-600" id="suggested-activity">${this.getRandomAlternativeActivity()}</p>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button id="resume-focus" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Resume Focus
+                    </button>
+                    <button id="take-break" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Take Break
+                    </button>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="flex items-center text-sm text-gray-600">
+                        <input type="checkbox" id="track-distraction" class="mr-2">
+                        Track this distraction (optional)
+                    </label>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Bind modal events
+        document.getElementById('resume-focus').addEventListener('click', () => {
+            this.resumeFocus();
+        });
+        
+        document.getElementById('take-break').addEventListener('click', () => {
+            this.takeBreak();
+        });
+        
+        // Auto-hide after 30 seconds
+        setTimeout(() => {
+            if (document.getElementById('mindful-pause-modal')) {
+                this.resumeFocus();
+            }
+        }, 30000);
+    }
+
+    resumeFocus() {
+        const modal = document.getElementById('mindful-pause-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        this.mindfulPauseShown = false;
+        this.distractionData.lastActivity = Date.now();
+        
+        // Show gentle encouragement
+        this.showEncouragementMessage();
+    }
+
+    takeBreak() {
+        const modal = document.getElementById('mindful-pause-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        this.mindfulPauseShown = false;
+        this.pauseTimer();
+        
+        // Show break suggestions
+        this.showBreakSuggestions();
+    }
+
+    showFocusReminder() {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 p-4 bg-blue-500 text-white rounded-lg shadow-lg z-50 max-w-sm fade-in';
+        notification.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                    <i data-lucide="target" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold">Welcome Back!</h4>
+                    <p class="text-sm opacity-90">Your focus session is still running. Ready to continue?</p>
+                </div>
+                <button class="flex-shrink-0 text-white opacity-75 hover:opacity-100" onclick="this.parentElement.parentElement.remove()">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+        
+        // Update icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    showEncouragementMessage() {
+        const messages = [
+            "Great! You're back on track. Keep going! 💪",
+            "Perfect! Your focus is returning. Stay with it! 🎯",
+            "Excellent! You've regained your concentration. 🧠",
+            "Wonderful! You're building focus resilience. 🌟"
+        ];
+        
+        const message = messages[Math.floor(Math.random() * messages.length)];
+        
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 p-4 bg-green-500 text-white rounded-lg shadow-lg z-50 max-w-sm fade-in';
+        notification.innerHTML = `
+            <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 3000);
+        
+        // Update icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    showBreakSuggestions() {
+        const suggestions = [
+            { activity: "Take a 5-minute walk", icon: "👟", duration: "5m" },
+            { activity: "Do some stretching", icon: "🧘", duration: "3m" },
+            { activity: "Get a glass of water", icon: "💧", duration: "1m" },
+            { activity: "Look out the window", icon: "👁️", duration: "2m" },
+            { activity: "Deep breathing exercise", icon: "🫁", duration: "2m" }
+        ];
+        
+        const modal = document.createElement('div');
+        modal.id = 'break-suggestions-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                <div class="text-center mb-6">
+                    <div class="text-3xl mb-2">☕</div>
+                    <h3 class="text-xl font-semibold text-gray-800">Break Suggestions</h3>
+                    <p class="text-gray-600">Choose an activity to refresh your mind:</p>
+                </div>
+                
+                <div class="space-y-3 mb-6">
+                    ${suggestions.map(suggestion => `
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer" 
+                             onclick="this.selectBreakActivity('${suggestion.activity}', '${suggestion.duration}')">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-2xl">${suggestion.icon}</span>
+                                <div>
+                                    <div class="font-medium text-gray-800">${suggestion.activity}</div>
+                                    <div class="text-sm text-gray-500">${suggestion.duration}</div>
+                                </div>
+                            </div>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-gray-400"></i>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="this.closeBreakSuggestions()" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Close
+                    </button>
+                    <button onclick="this.resumeSession()" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Resume Session
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Add methods to window for onclick handlers
+        window.selectBreakActivity = (activity, duration) => {
+            this.selectBreakActivity(activity, duration);
+        };
+        
+        window.closeBreakSuggestions = () => {
+            this.closeBreakSuggestions();
+        };
+        
+        window.resumeSession = () => {
+            this.resumeSession();
+        };
+        
+        // Update icons
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    selectBreakActivity(activity, duration) {
+        const modal = document.getElementById('break-suggestions-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        // Show activity timer
+        this.showActivityTimer(activity, duration);
+    }
+
+    showActivityTimer(activity, duration) {
+        const durationMinutes = parseInt(duration);
+        
+        const modal = document.createElement('div');
+        modal.id = 'activity-timer-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-8 text-center">
+                <div class="text-4xl mb-4">⏰</div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">${activity}</h3>
+                <p class="text-gray-600 mb-6">Take your time and enjoy this break.</p>
+                
+                <div class="text-3xl font-mono text-green-600 mb-6" id="activity-timer-display">${durationMinutes}:00</div>
+                
+                <div class="space-y-3">
+                    <button id="complete-activity" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Complete Activity
+                    </button>
+                    <button id="skip-activity" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-lg transition-colors">
+                        Skip
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Start countdown
+        let timeLeft = durationMinutes * 60;
+        const timerDisplay = document.getElementById('activity-timer-display');
+        
+        const countdown = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                this.completeActivity();
+            }
+        }, 1000);
+        
+        // Bind events
+        document.getElementById('complete-activity').addEventListener('click', () => {
+            clearInterval(countdown);
+            this.completeActivity();
+        });
+        
+        document.getElementById('skip-activity').addEventListener('click', () => {
+            clearInterval(countdown);
+            this.skipActivity();
+        });
+    }
+
+    completeActivity() {
+        const modal = document.getElementById('activity-timer-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        // Show completion message
+        this.showNotification('Break Complete! 🌟', 'Great job taking a mindful break. Ready to resume your focus session?');
+        
+        // Resume session after a moment
+        setTimeout(() => {
+            this.resumeSession();
+        }, 2000);
+    }
+
+    skipActivity() {
+        const modal = document.getElementById('activity-timer-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        this.resumeSession();
+    }
+
+    resumeSession() {
+        const modal = document.getElementById('break-suggestions-modal');
+        if (modal) {
+            modal.remove();
+        }
+        
+        // Resume timer
+        this.startTimer();
+        
+        // Show resumption message
+        this.showNotification('Session Resumed! 🎯', 'Welcome back to your focus session. You\'ve got this!');
+    }
+
+    closeBreakSuggestions() {
+        const modal = document.getElementById('break-suggestions-modal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    getRandomFocusGoal() {
+        return this.distractionData.focusGoals[Math.floor(Math.random() * this.distractionData.focusGoals.length)];
+    }
+
+    getRandomAlternativeActivity() {
+        const activity = this.distractionData.alternativeActivities[Math.floor(Math.random() * this.distractionData.alternativeActivities.length)];
+        return `${activity.name} (${activity.duration})`;
+    }
+
+    saveDistractionData() {
+        const today = new Date().toISOString().split('T')[0];
+        const distractionStats = {
+            date: today,
+            distractionCount: this.distractionData.distractionCount,
+            mindfulPauseCount: this.distractionData.mindfulPauseCount,
+            sessionDuration: this.currentTime || 0
+        };
+        
+        localStorage.setItem(`focusflow_distraction_${today}`, JSON.stringify(distractionStats));
+    }
+
+    bindDistractionEvents() {
+        // Add distraction tracking to settings if not already present
+        this.addDistractionSettingsToUI();
+    }
+
+    addDistractionSettingsToUI() {
+        // This will be called when settings modal is opened
+        const settingsModal = document.getElementById('settings-modal');
+        if (settingsModal && !document.getElementById('distraction-settings')) {
+            // Add distraction settings section to settings modal
+            const settingsContent = settingsModal.querySelector('.space-y-6');
+            if (settingsContent) {
+                const distractionSection = document.createElement('div');
+                distractionSection.id = 'distraction-settings';
+                distractionSection.innerHTML = `
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Distraction Management</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="enable-distraction-tracking" class="mr-3" checked>
+                                    <span>Enable distraction awareness</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">Get gentle reminders when you seem distracted</p>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Inactivity Threshold</label>
+                                <select id="inactivity-threshold" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    <option value="15000">15 seconds</option>
+                                    <option value="30000" selected>30 seconds</option>
+                                    <option value="60000">1 minute</option>
+                                    <option value="120000">2 minutes</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">How long to wait before showing mindful pause</p>
+                            </div>
+                            
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="track-distractions" class="mr-3">
+                                    <span>Track distraction patterns</span>
+                                </label>
+                                <p class="text-xs text-gray-500 mt-1">Save distraction data for insights (optional)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                settingsContent.appendChild(distractionSection);
+                
+                // Bind distraction settings events
+                this.bindDistractionSettingsEvents();
+            }
+        }
+    }
+
+    bindDistractionSettingsEvents() {
+        document.getElementById('enable-distraction-tracking')?.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                this.startDistractionMonitoring();
+            } else {
+                this.stopDistractionMonitoring();
+            }
+        });
+        
+        document.getElementById('inactivity-threshold')?.addEventListener('change', (e) => {
+            this.distractionData.inactivityThreshold = parseInt(e.target.value);
+            this.saveDistractionSettings();
+        });
+        
+        document.getElementById('track-distractions')?.addEventListener('change', (e) => {
+            this.distractionData.trackDistractions = e.target.checked;
+            this.saveDistractionSettings();
+        });
+    }
+
+    stopDistractionMonitoring() {
+        if (this.distractionInterval) {
+            clearInterval(this.distractionInterval);
+        }
+    }
+
+    // Draggable functionality
+    makeDraggable(element) {
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+
+        // Load saved position
+        const savedPosition = localStorage.getItem('focusflow_dark_mode_position');
+        if (savedPosition) {
+            const position = JSON.parse(savedPosition);
+            xOffset = position.x;
+            yOffset = position.y;
+            element.style.transform = `translate(${xOffset}px, ${yOffset}px)`;
+        }
+
+        // Add draggable styles
+        element.style.position = 'fixed';
+        element.style.zIndex = '9999';
+        element.style.cursor = 'grab';
+        element.style.userSelect = 'none';
+        element.style.touchAction = 'none';
+
+        // Add visual feedback
+        element.addEventListener('mouseenter', () => {
+            if (!isDragging) {
+                element.style.cursor = 'grab';
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.05)`;
+            }
+        });
+
+        element.addEventListener('mouseleave', () => {
+            if (!isDragging) {
+                element.style.cursor = 'grab';
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1)`;
+            }
+        });
+
+        // Mouse events
+        element.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            element.style.cursor = 'grabbing';
+            element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.1)`;
+            
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                // Constrain to viewport
+                const rect = element.getBoundingClientRect();
+                const maxX = window.innerWidth - rect.width;
+                const maxY = window.innerHeight - rect.height;
+                
+                if (xOffset < 0) xOffset = 0;
+                if (xOffset > maxX) xOffset = maxX;
+                if (yOffset < 0) yOffset = 0;
+                if (yOffset > maxY) yOffset = maxY;
+                
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.1)`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                element.style.cursor = 'grab';
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1)`;
+                
+                // Save position
+                localStorage.setItem('focusflow_dark_mode_position', JSON.stringify({
+                    x: xOffset,
+                    y: yOffset
+                }));
+            }
+        });
+
+        // Touch events for mobile
+        element.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = true;
+            element.style.cursor = 'grabbing';
+            element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.1)`;
+            
+            const touch = e.touches[0];
+            initialX = touch.clientX - xOffset;
+            initialY = touch.clientY - yOffset;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                currentX = touch.clientX - initialX;
+                currentY = touch.clientY - initialY;
+                
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                // Constrain to viewport
+                const rect = element.getBoundingClientRect();
+                const maxX = window.innerWidth - rect.width;
+                const maxY = window.innerHeight - rect.height;
+                
+                if (xOffset < 0) xOffset = 0;
+                if (xOffset > maxX) xOffset = maxX;
+                if (yOffset < 0) yOffset = 0;
+                if (yOffset > maxY) yOffset = maxY;
+                
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1.1)`;
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            if (isDragging) {
+                isDragging = false;
+                element.style.cursor = 'grab';
+                element.style.transform = `translate(${xOffset}px, ${yOffset}px) scale(1)`;
+                
+                // Save position
+                localStorage.setItem('focusflow_dark_mode_position', JSON.stringify({
+                    x: xOffset,
+                    y: yOffset
+                }));
+            }
+        });
+
+        // Double-click to reset position
+        element.addEventListener('dblclick', () => {
+            xOffset = 0;
+            yOffset = 0;
+            element.style.transform = 'translate(0px, 0px) scale(1)';
+            localStorage.removeItem('focusflow_dark_mode_position');
+        });
+
+        // Add visual indicator that it's draggable
+        element.title = 'Drag to move • Double-click to reset position';
     }
 }
+
+// Initialize FocusFlow when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new FocusFlow();
+});
+
+
 
 // Service Worker for PWA functionality
 if ('serviceWorker' in navigator) {

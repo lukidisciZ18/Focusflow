@@ -1,14 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>FocusFlow - Your Personal Focus Coach</title>
     <meta name="description" content="Build sustainable focus habits with personalized coaching, smart reminders, and culturally diverse wisdom.">
     
-    <!-- Google Fonts -->
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="FocusFlow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="FocusFlow">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="msapplication-config" content="/browserconfig.xml">
+    <meta name="msapplication-TileColor" content="#10B981">
+    <meta name="msapplication-tap-highlight" content="no">
+    
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#10B981">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#10B981">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1F2937">
+    
+    <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    
+    <!-- Google Fonts with Display Swap -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS CDN -->
@@ -18,27 +41,65 @@
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=1752405300">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#10B981">
+    
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-167x167.png">
     
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    
+    <!-- Splash Screen -->
+    <link rel="apple-touch-startup-image" href="/apple-splash-2048x2732.png" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/apple-splash-1668x2388.png" media="(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/apple-splash-1536x2048.png" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/apple-splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    <link rel="apple-touch-startup-image" href="/apple-splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
+    
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "FocusFlow",
+        "description": "Your Personal Focus Coach",
+        "url": "https://focusflow.app",
+        "applicationCategory": "ProductivityApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        }
+    }
+    </script>
 </head>
-<body class="bg-gray-50 text-gray-900 transition-colors duration-300">
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300" style="padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);">
+    <!-- Skip to Main Content Link for Accessibility -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-green-500 text-white px-4 py-2 rounded-lg z-50">
+        Skip to main content
+    </a>
+    
     <!-- App Container -->
     <div id="app" class="min-h-screen">
         <!-- Loading Screen -->
-        <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div id="loading-screen" class="fixed inset-0 bg-white dark:bg-gray-900 z-50 flex items-center justify-center" role="status" aria-label="Loading FocusFlow">
             <div class="text-center">
-                <div class="text-4xl mb-4">🎯</div>
-                <div class="text-2xl font-bold text-gray-800 mb-2">FocusFlow</div>
-                <div class="text-gray-600">Your Personal Focus Coach</div>
+                <div class="text-4xl mb-4 animate-pulse">🎯</div>
+                <div class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">FocusFlow</div>
+                <div class="text-gray-600 dark:text-gray-400">Your Personal Focus Coach</div>
                 <div class="mt-4">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto" aria-hidden="true"></div>
                 </div>
+                <div class="sr-only">Loading FocusFlow application...</div>
             </div>
         </div>
 
@@ -67,11 +128,11 @@
                 <!-- Progress Bar -->
                 <div class="px-8 pt-12 pb-6">
                     <div class="flex justify-between items-center mb-4">
-                        <span class="text-sm text-slate-600 font-medium">Step <span id="current-step">1</span> of 7</span>
-                        <span class="text-sm text-slate-600 font-medium"><span id="progress-percentage">14</span>%</span>
+                        <span class="text-sm text-slate-600 font-medium">Step <span id="current-step">1</span> of 6</span>
+                        <span class="text-sm text-slate-600 font-medium"><span id="progress-percentage">17</span>%</span>
                     </div>
                     <div class="w-full bg-white/50 backdrop-blur-sm rounded-full h-2" aria-hidden="true">
-                        <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 14%"></div>
+                        <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-1000 ease-out" style="width: 17%"></div>
                     </div>
                 </div>
 
@@ -99,70 +160,77 @@
         <!-- Main App -->
         <div id="main-app" class="hidden min-h-screen">
             <!-- Header -->
-            <header class="bg-white shadow-sm border-b border-gray-200">
+            <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 backdrop-blur-sm bg-white/90 dark:bg-gray-800/90">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex justify-between items-center h-16">
                         <div class="flex items-center">
-                            <div class="text-2xl mr-3">🎯</div>
-                            <h1 class="text-xl font-bold text-gray-900">FocusFlow</h1>
+                            <div class="text-2xl mr-3" aria-hidden="true">🎯</div>
+                            <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">FocusFlow</h1>
                         </div>
-                        <div class="flex items-center space-x-4">
-                            <button id="mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                                <i data-lucide="moon" class="w-5 h-5"></i>
+                        <nav class="flex items-center space-x-2 sm:space-x-4" role="navigation" aria-label="Main navigation">
+                            <button id="mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500" title="Toggle Mode (Zen/Achievement/Hybrid)" aria-label="Toggle focus mode">
+                                <i data-lucide="zap" class="w-5 h-5" aria-hidden="true"></i>
                             </button>
-                            <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                                <i data-lucide="settings" class="w-5 h-5"></i>
+                            <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500" aria-label="Open settings">
+                                <i data-lucide="settings" class="w-5 h-5" aria-hidden="true"></i>
                             </button>
-                            <button id="sign-out-btn" class="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200">
-                                <i data-lucide="log-out" class="w-5 h-5"></i>
+                            <button id="dark-mode-toggle" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500" title="Toggle Dark Mode" aria-label="Toggle dark mode">
+                                <i data-lucide="moon" class="w-5 h-5" aria-hidden="true"></i>
                             </button>
-                        </div>
+                            <button id="sign-out-btn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500" aria-label="Sign out">
+                                <i data-lucide="log-out" class="w-5 h-5" aria-hidden="true"></i>
+                            </button>
+                        </nav>
                     </div>
                 </div>
             </header>
 
             <!-- Main Content -->
-            <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <main id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8" role="main">
                 <!-- Dashboard -->
-                <div id="dashboard" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div id="dashboard" class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                     <!-- Timer Section -->
                     <div class="lg:col-span-2">
-                        <div id="timer-container" class="bg-white rounded-2xl shadow-lg p-8">
+                        <div id="timer-container" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6 lg:p-8 h-full">
                             <div class="text-center">
-                                <h2 class="text-2xl font-bold text-gray-800 mb-6">Focus Timer</h2>
-                                <div class="relative inline-block">
-                                <svg id="progress-ring" class="w-64 h-64 transform -rotate-90" viewBox="0 0 120 120">
-                                    <circle cx="60" cy="60" r="54" stroke="#E5E7EB" stroke-width="4" fill="transparent"/>
-                                    <circle class="progress-ring-circle" cx="60" cy="60" r="54" stroke="#10B981" stroke-width="4" fill="transparent" stroke-linecap="round"/>
-                                </svg>
-                                <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-4xl font-mono text-gray-800">25:00</div>
-                            </div>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                                    <button id="quick-focus" class="px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                                        <div class="text-sm font-semibold">Quick Focus</div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 sm:mb-6">Focus Timer</h2>
+                                <div class="relative inline-block mb-6">
+                                    <svg id="progress-ring" class="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 transform -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+                                        <circle cx="60" cy="60" r="54" stroke="currentColor" stroke-width="4" fill="transparent" class="text-gray-200 dark:text-gray-700"/>
+                                        <circle class="progress-ring-circle" cx="60" cy="60" r="54" stroke="currentColor" stroke-width="4" fill="transparent" stroke-linecap="round" class="text-green-500"/>
+                                    </svg>
+                                    <div id="timer-display" class="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-mono text-gray-800 dark:text-gray-100 font-bold" role="timer" aria-live="polite">25:00</div>
+                                </div>
+                                
+                                <!-- Timer Presets - Responsive Grid -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
+                                    <button id="quick-focus" class="px-3 sm:px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2" aria-label="Set quick focus timer (15-30 minutes)">
+                                        <div class="text-xs sm:text-sm font-semibold">Quick Focus</div>
                                         <div class="text-xs opacity-90">15-30 min</div>
                                     </button>
-                                    <button id="deep-work" class="px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                                        <div class="text-sm font-semibold">Deep Work</div>
+                                    <button id="deep-work" class="px-3 sm:px-4 py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2" aria-label="Set deep work timer (60-180 minutes)">
+                                        <div class="text-xs sm:text-sm font-semibold">Deep Work</div>
                                         <div class="text-xs opacity-90">60-180 min</div>
                                     </button>
-                                    <button id="marathon" class="px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                                        <div class="text-sm font-semibold">Marathon</div>
+                                    <button id="marathon" class="px-3 sm:px-4 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2" aria-label="Set marathon timer (3+ hours)">
+                                        <div class="text-xs sm:text-sm font-semibold">Marathon</div>
                                         <div class="text-xs opacity-90">3+ hours</div>
                                     </button>
-                                    <button id="custom-timer" class="px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                                        <div class="text-sm font-semibold">Custom</div>
+                                    <button id="custom-timer" class="px-3 sm:px-4 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2" aria-label="Set custom timer">
+                                        <div class="text-xs sm:text-sm font-semibold">Custom</div>
                                         <div class="text-xs opacity-90">Set time</div>
                                     </button>
                                 </div>
-                                <div class="flex justify-center space-x-4">
-                                    <button id="start-timer" class="px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors duration-200">
+                                
+                                <!-- Timer Controls - Touch Friendly -->
+                                <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                                    <button id="start-timer" class="px-6 sm:px-8 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 min-h-[44px]" aria-label="Start focus timer">
                                         Start
                                     </button>
-                                    <button id="pause-timer" class="px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors duration-200 hidden">
+                                    <button id="pause-timer" class="px-6 sm:px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 hidden min-h-[44px]" aria-label="Pause focus timer">
                                         Pause
                                     </button>
-                                    <button id="stop-timer" class="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors duration-200 hidden">
+                                    <button id="stop-timer" class="px-6 sm:px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 hidden min-h-[44px]" aria-label="Stop focus timer">
                                         Stop
                                     </button>
                                 </div>
@@ -171,37 +239,263 @@
                     </div>
 
                     <!-- Sidebar -->
-                    <div class="space-y-6">
-                        <!-- Daily Quote -->
-                        <div id="quote-card" class="bg-white rounded-2xl shadow-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Today's Wisdom</h3>
-                            <div id="quote-text" class="text-gray-700 italic mb-4">
+                    <div class="space-y-4 sm:space-y-6 h-full">
+
+                        <!-- Wisdom Section -->
+                        <div id="quote-card" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">Today's Wisdom</h3>
+                            <div id="quote-text" class="text-sm sm:text-base text-gray-700 dark:text-gray-300 italic mb-3 sm:mb-4 leading-relaxed">
                                 "You have power over your mind - not outside events. Realize this, and you will find strength."
                             </div>
-                            <div id="quote-author" class="text-sm text-gray-600">— Marcus Aurelius</div>
-                            <button id="new-quote" class="mt-4 text-sm text-green-600 hover:text-green-700 transition-colors duration-200">
+                            <div id="quote-author" class="text-xs sm:text-sm text-gray-600 dark:text-gray-400">— Marcus Aurelius</div>
+                            <button id="new-quote" class="mt-3 sm:mt-4 text-xs sm:text-sm text-green-600 hover:text-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 rounded px-2 py-1" aria-label="Get new wisdom quote">
                                 New Quote
                             </button>
                         </div>
 
-                        <!-- Lock Screen Widget Preview -->
-                        <div id="widget-preview" class="hidden mt-6"></div>
+                        <!-- Lock Screen Widget -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 sm:p-6">
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3 sm:mb-4">Lock Screen Widget</h3>
+                            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-4">Would you like to display your focus timer on your device's lock screen?</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs sm:text-sm text-gray-700 dark:text-gray-300">Show timer on lock screen</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="lock-screen-widget" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                                </label>
+                            </div>
+                            <div id="widget-preview" class="hidden mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div class="text-center">
+                                    <div class="text-2xl font-mono text-gray-800 dark:text-gray-100">25:00</div>
+                                    <div class="text-sm text-gray-600 dark:text-gray-400">Focus Session</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Smart Schedule -->
+                        <div id="schedule-card" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Today's Schedule</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="sunrise" class="w-4 h-4 text-blue-600"></i>
+                                        <span class="text-sm font-medium text-blue-800 dark:text-blue-200">Wake-up</span>
+                                    </div>
+                                    <span id="wake-up-display" class="text-sm font-mono text-blue-600 dark:text-blue-400">06:00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="target" class="w-4 h-4 text-green-600"></i>
+                                        <span class="text-sm font-medium text-green-800 dark:text-green-200">Focus Window</span>
+                                    </div>
+                                    <span id="focus-window-display" class="text-sm font-mono text-green-600 dark:text-green-400">09:00-17:00</span>
+                                </div>
+                                <div class="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                    <div class="flex items-center space-x-2">
+                                        <i data-lucide="moon" class="w-4 h-4 text-purple-600"></i>
+                                        <span class="text-sm font-medium text-purple-800 dark:text-purple-200">Bedtime</span>
+                                    </div>
+                                    <span id="bedtime-display" class="text-sm font-mono text-purple-600 dark:text-purple-400">23:00</span>
+                                </div>
+                            </div>
+                            <button id="edit-schedule-btn" class="w-full mt-4 text-sm text-green-600 hover:text-green-700 transition-colors duration-200">
+                                Edit Schedule
+                            </button>
+                        </div>
 
                         <!-- Progress Summary -->
-                        <div id="progress-card" class="bg-white rounded-2xl shadow-lg p-6">
-                            <h3 class="text-lg font-semibold text-gray-800 mb-4">Today's Progress</h3>
+                        <div id="progress-card" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">Today's Progress</h3>
                             <div class="space-y-4">
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-600">Focus Time</span>
+                                    <span class="text-gray-600 dark:text-gray-400">Focus Time</span>
                                     <span id="today-focus-time" class="font-semibold">0h 0m</span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-600">Sessions</span>
+                                    <span class="text-gray-600 dark:text-gray-400">Sessions</span>
                                     <span id="today-sessions" class="font-semibold">0</span>
                                 </div>
                                 <div class="flex justify-between items-center">
-                                    <span class="text-gray-600">Streak</span>
+                                    <span class="text-gray-600 dark:text-gray-400">Streak</span>
                                     <span id="current-streak" class="font-semibold">0 days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Tracking & Analytics -->
+                        <div id="analytics-card" class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-100">Progress Analytics</h3>
+                                <button id="export-data" class="text-sm text-green-600 hover:text-green-700 transition-colors duration-200">
+                                    <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
+                                    Export
+                                </button>
+                            </div>
+                            
+                            <!-- Analytics Tabs -->
+                            <div class="mb-4">
+                                <div class="flex space-x-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                                    <button id="tab-streaks" class="analytics-tab active flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-200">
+                                        Streaks
+                                    </button>
+                                    <button id="tab-charts" class="analytics-tab flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-200">
+                                        Charts
+                                    </button>
+                                    <button id="tab-stats" class="analytics-tab flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-200">
+                                        Stats
+                                    </button>
+                                    <button id="tab-insights" class="analytics-tab flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors duration-200">
+                                        Insights
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Streaks Calendar View -->
+                            <div id="streaks-view" class="analytics-content active">
+                                <div class="mb-4">
+                                    <h4 class="text-md font-semibold text-gray-700 mb-2">Focus Streaks Calendar</h4>
+                                    <div id="streaks-calendar" class="grid grid-cols-7 gap-1 mb-3">
+                                        <!-- Calendar days will be generated here -->
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500">
+                                        <span>Current Streak: <span id="current-streak-days" class="font-semibold text-green-600">0</span> days</span>
+                                        <span>Best Streak: <span id="best-streak-days" class="font-semibold text-blue-600">0</span> days</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Weekly/Monthly Charts -->
+                            <div id="charts-view" class="analytics-content hidden">
+                                <div class="mb-4">
+                                    <h4 class="text-md font-semibold text-gray-700 mb-2">Focus Hours</h4>
+                                    <div class="flex space-x-2 mb-3">
+                                        <button id="chart-week" class="chart-period active text-xs px-3 py-1 rounded-md transition-colors duration-200">
+                                            Week
+                                        </button>
+                                        <button id="chart-month" class="chart-period text-xs px-3 py-1 rounded-md transition-colors duration-200">
+                                            Month
+                                        </button>
+                                    </div>
+                                    <div id="focus-chart" class="h-32 bg-gray-50 rounded-lg flex items-end justify-between p-2">
+                                        <!-- Chart bars will be generated here -->
+                                    </div>
+                                    <div class="flex justify-between text-xs text-gray-500 mt-2">
+                                        <span>Total: <span id="chart-total-hours" class="font-semibold">0h</span></span>
+                                        <span>Avg: <span id="chart-avg-hours" class="font-semibold">0h</span></span>
+                                        <span>Sessions: <span id="chart-total-sessions" class="font-semibold">0</span></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Personal Statistics -->
+                            <div id="stats-view" class="analytics-content hidden">
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                                            <div class="text-2xl font-bold text-green-600 dark:text-green-400" id="total-focus-hours">0</div>
+                                            <div class="text-xs text-green-700 dark:text-green-300">Total Hours</div>
+                                        </div>
+                                        <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="total-sessions">0</div>
+                                            <div class="text-xs text-blue-700 dark:text-blue-300">Total Sessions</div>
+                                        </div>
+                                        <div class="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                                            <div class="text-2xl font-bold text-purple-600 dark:text-purple-400" id="avg-session-length">0m</div>
+                                            <div class="text-xs text-purple-700 dark:text-purple-300">Avg Session</div>
+                                        </div>
+                                        <div class="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                                            <div class="text-2xl font-bold text-orange-600 dark:text-orange-400" id="completion-rate">0%</div>
+                                            <div class="text-xs text-orange-700 dark:text-orange-300">Completion Rate</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Goal Progress -->
+                                    <div class="mt-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Daily Goal Progress</span>
+                                            <span class="text-sm text-gray-500 dark:text-gray-400" id="goal-progress-text">0/4h</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                            <div id="goal-progress-bar" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Personal Bests -->
+                                    <div class="mt-4">
+                                        <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Personal Bests</h5>
+                                        <div class="space-y-2 text-xs">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Longest Session:</span>
+                                                <span class="font-semibold" id="longest-session">0m</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Most Sessions/Day:</span>
+                                                <span class="font-semibold" id="most-sessions-day">0</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Best Streak:</span>
+                                                <span class="font-semibold" id="best-streak">0 days</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Most Hours/Day:</span>
+                                                <span class="font-semibold" id="most-hours-day">0h</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Detailed Insights -->
+                            <div id="insights-view" class="analytics-content hidden">
+                                <div class="space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="text-center p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                                            <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400" id="goal-achievement-rate">0%</div>
+                                            <div class="text-xs text-indigo-700 dark:text-indigo-300">Goal Achievement</div>
+                                        </div>
+                                        <div class="text-center p-3 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
+                                            <div class="text-2xl font-bold text-teal-600 dark:text-teal-400" id="activity-rate">0%</div>
+                                            <div class="text-xs text-teal-700 dark:text-teal-300">Activity Rate</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Weekly Progress -->
+                                    <div class="mt-4">
+                                        <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Weekly Progress</h5>
+                                        <div class="space-y-2">
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs text-gray-600 dark:text-gray-400">This Week</span>
+                                                <span class="text-xs font-semibold" id="this-week-hours">0h</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs text-gray-600 dark:text-gray-400">Last Week</span>
+                                                <span class="text-xs font-semibold" id="last-week-hours">0h</span>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <span class="text-xs text-gray-600 dark:text-gray-400">Weekly Goal</span>
+                                                <span class="text-xs font-semibold">28h</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Productivity Patterns -->
+                                    <div class="mt-4">
+                                        <h5 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Productivity Patterns</h5>
+                                        <div class="space-y-2 text-xs">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Best Day:</span>
+                                                <span class="font-semibold" id="best-productivity-day">-</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Peak Hours:</span>
+                                                <span class="font-semibold" id="peak-productivity-hours">-</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600 dark:text-gray-400">Consistency Score:</span>
+                                                <span class="font-semibold" id="consistency-score">0%</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -258,6 +552,46 @@
                             </div>
                         </div>
 
+                        <!-- Smart Scheduling -->
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Smart Scheduling</h3>
+                            <div class="space-y-4">
+                                <!-- Wake-up Time -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Wake-up Time</label>
+                                    <input type="time" id="wake-up-time" value="06:00" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    <p class="text-xs text-gray-500">When you want to start your day</p>
+                                </div>
+                                
+                                <!-- Bedtime -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Bedtime</label>
+                                    <input type="time" id="bedtime" value="23:00" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                    <p class="text-xs text-gray-500">When you want to wind down</p>
+                                </div>
+                                
+                                <!-- Focus Windows -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700">Focus Windows</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Start</label>
+                                            <input type="time" id="focus-window-start" value="09:00" 
+                                                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">End</label>
+                                            <input type="time" id="focus-window-end" value="17:00" 
+                                                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm">
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500">Optimal hours for deep focus work</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Notification Settings -->
                         <div>
                             <h3 class="text-lg font-semibold text-gray-800 mb-3">Notifications</h3>
@@ -274,6 +608,18 @@
                                     <input type="checkbox" id="daily-motivation" class="mr-3">
                                     <span>Daily motivation</span>
                                 </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="wake-up-reminders" class="mr-3">
+                                    <span>Morning motivation</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="wind-down-reminders" class="mr-3">
+                                    <span>Wind-down reminders</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" id="focus-window-reminders" class="mr-3">
+                                    <span>Focus window alerts</span>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -285,8 +631,11 @@
     <!-- Mock API for testing -->
     <script src="api-mock.js"></script>
     
+    <!-- Dark Mode -->
+    <script src="darkMode.js"></script>
+    
     <!-- JavaScript -->
-    <script src="app.js"></script>
+    <script src="app.js?v=1752405300"></script>
 
     <!-- Custom Timer Modal -->
     <div id="custom-timer-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
